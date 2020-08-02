@@ -223,6 +223,7 @@ exports.unlikeBark = (req, res) => {
 
 // Delete a bark
 exports.deleteBark = (req, res) => {
+  console.log(`Deleting bark: ${req.params.barkId}`);
   const document = db.doc(`/barks/${req.params.barkId}`);
   document
     .get()
