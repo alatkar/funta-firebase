@@ -1,5 +1,5 @@
 module.exports = {
-  apiKey: "AIzaSyDsfyNvGcsinny3xgYAx03tT_Tbw9C3dIQ",
+  apiKey: "API-Key-ask-me",
   authDomain: "funta-33071.firebaseapp.com",
   databaseURL: "https://funta-33071.firebaseio.com",
   projectId: "funta-33071",
