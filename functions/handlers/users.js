@@ -117,6 +117,26 @@ exports.getAuthenticatedUser = (req, res) => {
       userData.likes = [];
       data.forEach((doc) => {
         userData.likes.push(doc.data());
+      });      
+      return db
+        .collection("notifications")
+        .where("recipient", "==", req.user.userName)
+        .orderBy("createdAt", "desc")
+        //.limit(10)
+        .get();
+    })
+    .then((data) => {
+      userData.notifications = [];
+      data.forEach((doc) => {
+        userData.notifications.push({
+          recipient: doc.data().recipient,
+          sender: doc.data().sender,
+          createdAt: doc.data().createdAt,
+          barkId: doc.data().barkId,
+          type: doc.data().type,
+          read: doc.data().read,
+          notificationId: doc.id,
+        });
       });
       return res.json(userData);
     })
