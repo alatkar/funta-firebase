@@ -44,11 +44,43 @@ exports.postBark = (req, res) => {
 
   db.collection('barks')
     .add(newBark)
-    .then((doc) => {      
-      res.json({ message: `document ${doc.id} create successfully!` });
+    .then((doc) => {     
+      const resScream = newScream;
+      resScream.screamId = doc.id;
+      res.json(resScream);
     })
     .catch((err) => {
       console.error(err);
       res.status(500).json({ error: `Something went wrong ${err.message}` });      
     });
 };
+
+exports.getBark = (req, res) => {
+  let barkData = {};
+
+  db.doc(`/barks/${req.params.barkId}`).get()
+  .then(doc => {
+    if (!doc.exists) {
+      return res.status(404).json({ error: 'Scream not found' });
+    }
+    barkData = doc.data();
+    barkData.barkId = doc.id;
+    return db
+        .collection('comments')
+        .orderBy('createdAt', 'desc')  //fails with Index error
+        .where('barkId', '==', req.params.barkId)
+        .get();
+  })
+  .then((data) => {
+    barkData.comments = [];
+    data.forEach((doc) => {
+      barkData.comments.push(doc.data());
+    });
+    return res.json(barkData);
+  })
+  .catch((err) => {
+    console.error(err);
+    res.status(500).json({ errorCode: err.code , errordetails: err.details});
+  });
+
+}
