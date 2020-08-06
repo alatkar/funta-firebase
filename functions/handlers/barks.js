@@ -12,6 +12,7 @@ exports.getAllBarks = (req, res) => {
           barkId: element.id,
           message: element.data().message,
           userName: element.data().userName,
+          imageUrl: element.data().imageUrl,
           userId: element.data().userId,
           createdAt: element.data().createdAt,
         });
