@@ -15,6 +15,8 @@ exports.getAllBarks = (req, res) => {
           imageUrl: element.data().imageUrl,
           userId: element.data().userId,
           createdAt: element.data().createdAt,
+          likeCount: element.data().likeCount,
+          commentCount: element.data().commentCount,
         });
       });
       return res.json(barks);
