@@ -32,7 +32,7 @@ const {
 // Get Barks routes
 app.get("/barks", getAllBarks);
 app.post("/barks", fireBaseAuth, postBark);
-app.get("/barks/:barkId", deleteBark);
+app.get("/barks/:barkId", getBark);
 app.delete("/barks/:barkId", fireBaseAuth, deleteBark);
 
 app.post("/barks/:barkId/comment", fireBaseAuth, commentOnBark);

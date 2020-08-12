@@ -94,15 +94,15 @@ exports.getBark = (req, res) => {
 // Comment on Bark
 exports.commentOnBark = (req, res) => {
   console.log("Body ", req.body);
-  if (req.body.comment.trim() === "")
-    return res.status(400).json({ comment: "Must not be empty" });
+  if (req.body.message.trim() === "")
+    return res.status(400).json({ message: "Must not be empty" });
 
   const newComment = {
-    comment: req.body.comment,
+    message: req.body.message,
     createdAt: new Date().toISOString(),
     barkId: req.params.barkId,
     userName: req.user.userName,
-    userImage: req.user.imageUrl,
+    imageUrl: req.user.imageUrl,
   };
   console.log(newComment);
 
