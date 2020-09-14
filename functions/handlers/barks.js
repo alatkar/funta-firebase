@@ -1,4 +1,5 @@
-const { db } = require("../util/admin");
+const { admin, db } = require("../util/admin");
+const config = require("../util/config");
 
 exports.getAllBarks = (req, res) => {
   db.collection("barks")
@@ -27,6 +28,66 @@ exports.getAllBarks = (req, res) => {
     });
 };
 
+// Upload a profile image for user
+exports.uploadBarkImage = (req, res) => {
+  console.log("Uploading image for bark:", req);
+  const BusBoy = require("busboy");
+  const path = require("path");
+  const os = require("os");
+  const fs = require("fs");
+
+  const busboy = new BusBoy({ headers: req.headers });
+
+  let imageToBeUploaded = {};
+  let imageFileName;
+  // TODO: String for image token
+  //let generatedToken = uuid();
+
+  busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
+    console.log(fieldname, file, filename, encoding, mimetype);
+    if (mimetype !== "image/jpeg" && mimetype !== "image/png") {
+      return res.status(400).json({ error: "Wrong file type submitted" });
+    }
+    // my.image.png => ['my', 'image', 'png']
+    const imageExtension = filename.split(".")[filename.split(".").length - 1];
+    // 32756238461724837.png
+    imageFileName = `${req.user.userName}-bark-${Math.round(
+      Math.random() * 1000000000000
+    ).toString()}.${imageExtension}`;
+    const filepath = path.join(os.tmpdir(), imageFileName);
+    imageToBeUploaded = { filepath, mimetype };
+    file.pipe(fs.createWriteStream(filepath));
+  });
+  busboy.on("finish", () => {
+    admin
+      .storage()
+      .bucket(config.storageBucket)
+      .upload(imageToBeUploaded.filepath, {
+        resumable: false,
+        metadata: {
+          metadata: {
+            contentType: imageToBeUploaded.mimetype,
+            //Generate token to be appended to imageUrl
+            //firebaseStorageDownloadTokens: generatedToken,
+          },
+        },
+      })
+      .then(() => {
+        console.log("Uploading image for user:", req.user);
+        // Append token to url
+        //const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media&token=${generatedToken}`;
+        const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
+        console.log("Uploaded bark image: ", imageUrl);
+        res.json(imageUrl);
+      })
+      .catch((err) => {
+        console.error(err);
+        return res.status(500).json({ error: "something went wrong" });
+      });
+  });
+  busboy.end(req.rawBody);
+};
+
 exports.postBark = (req, res) => {
   console.log("Body ", req.body);
 
@@ -38,7 +99,7 @@ exports.postBark = (req, res) => {
   const newBark = {
     message: req.body.message,
     userName: req.user.userName,
-    imageUrl: req.user.imageUrl,
+    imageUrl: req.body.imageUrl,
     userId: req.user.userId,
     //createdAt: admin.firestore.Timestamp.fromDate(new Date())
     createdAt: new Date().toISOString(),

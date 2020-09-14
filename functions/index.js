@@ -11,6 +11,7 @@ const { db } = require("./util/admin");
 const {
   getBark,
   getAllBarks,
+  uploadBarkImage,
   postBark,
   deleteBark,
   commentOnBark,
@@ -32,6 +33,7 @@ const {
 // Get Barks routes
 app.get("/barks", getAllBarks);
 app.post("/barks", fireBaseAuth, postBark);
+app.post("/barks/image", fireBaseAuth, uploadBarkImage);
 app.get("/barks/:barkId", getBark);
 app.delete("/barks/:barkId", fireBaseAuth, deleteBark);
 
