@@ -116,6 +116,10 @@ exports.createNotificationOnComment = functions.firestore
       });
   });
 
+/* 
+We don't need this.
+We were putting user imgae as Bark image. If user image is changed. This function will change image Url in all barks.
+
 exports.onUserImageChange = functions.firestore
   .document("/users/{userId}")
   .onUpdate((change) => {
@@ -137,6 +141,7 @@ exports.onUserImageChange = functions.firestore
         });
     } else return true;
   });
+*/
 
 exports.onBarkDelete = functions
   //.region("europe-west1")
