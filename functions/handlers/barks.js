@@ -7,14 +7,20 @@ exports.getAllBarks = (req, res) => {
     .get()
     .then((data) => {
       let barks = [];
+      let imageUrls = [];
       data.forEach((element) => {
         // TODO: Use spread syntax if it is allowed
         barks.push({
           barkId: element.id,
           message: element.data().message,
           userName: element.data().userName,
-          imageUrl: element.data().imageUrl,
+          // Check if it is array and send as it is
+          // If it is string, covert to array
           userId: element.data().userId,
+          // Passing same image as user image. Need to do DB join
+          // Also we are going to have multiple images to post. In this case this
+          // code should return first image
+          userImageUrl: element.data().imageUrl,
           createdAt: element.data().createdAt,
           likeCount: element.data().likeCount,
           commentCount: element.data().commentCount,
