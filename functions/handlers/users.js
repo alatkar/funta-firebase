@@ -1,6 +1,7 @@
 const { admin, db } = require("../util/admin");
 const config = require("../util/config");
 const firebase = require("firebase");
+const enumDefinations = require("../util/enums");
 
 const {
   validateSignupData,
@@ -50,6 +51,8 @@ exports.signupUser = (req, res) => {
     password: req.body.password,
     confirmPassword: req.body.confirmPassword,
     userName: req.body.userName,
+    userType: req.body.userType,
+    isNonProfitOrganization: req.body.isNonProfitOrganization,
   };
 
   // Data validation
@@ -57,6 +60,22 @@ exports.signupUser = (req, res) => {
   if (!valid) return res.status(400).json(errors);
 
   let noImage = "no-img.png";
+  
+  // Sanitize User Type
+  let value = req.body.userType ? req.body.userType.toUpperCase() : enumDefinations.userType.INDIVIDUAL;
+  switch(value)
+  {
+    case enumDefinations.userType.INDIVIDUAL:
+    case enumDefinations.userType.ORGANIZATION:
+      newUser.userType = value;
+      break;
+    default:
+      console.log("User Type is incorrect for user ", newUser.userName, " Setting userType as ", enumDefinations.userType.INDIVIDUAL);
+      newUser.userType =   enumDefinations.userType.INDIVIDUAL;
+  }
+  // Sanitize Organization Type: By default set as false;
+  let isNonProfitOrganization = req.body.isNonProfitOrganization ? req.body.isNonProfitOrganization : false;
+  newUser.isNonProfitOrganization = isNonProfitOrganization;
 
   let token, userId;
   db.doc(`/users/${newUser.userName}`)
@@ -82,6 +101,8 @@ exports.signupUser = (req, res) => {
         imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImage}?alt=media`,
         userId: userId,
         userName: newUser.userName,
+        userType: newUser.userType,
+        isNonProfitOrganization: newUser.isNonProfitOrganization
       };
       db.doc(`/users/${newUser.userName}`).set(userCred);
     })
@@ -140,6 +161,24 @@ exports.getUserDetails = (req, res) => {
     .catch((err) => {
       console.error(err);
       return res.status(500).json({ error: err.code });
+    });
+};
+
+// Get user image
+exports.getUserImageUrl = async (req) => {
+  console.log("getUserImageUrl: getting data for :", req.params.userName);
+  db.doc(`/users/${req.params.userName}`)
+    .get()
+    .then((doc) => {
+      if (doc.exists) {        
+        console.log("getUserImageUrl: found data ", doc.data().imageUrl);
+        return doc.data().imageUrl;
+      } 
+      else
+         return null;
+    })
+    .catch((err) => {
+      console.error("getUserImage Error ", err);
     });
 };
 

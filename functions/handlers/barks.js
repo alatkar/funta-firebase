@@ -1,31 +1,52 @@
 const { admin, db } = require("../util/admin");
 const config = require("../util/config");
+const enumDefinations = require("../util/enums");
+const { getUserImageUrl} = require("./users");
 
 exports.getAllBarks = (req, res) => {
+  let barks = [];
   db.collection("barks")
     .orderBy("createdAt", "desc")
     .get()
     .then((data) => {
-      let barks = [];
-      let imageUrls = [];
       data.forEach((element) => {
         // TODO: Use spread syntax if it is allowed
         barks.push({
+          barkCategory: element.data().subject,
           barkId: element.id,
-          message: element.data().message,
-          userName: element.data().userName,
-          // Check if it is array and send as it is
+          commentCount: element.data().commentCount,          
+          createdAt: element.data().createdAt,
+          eventDate: element.data().eventDate,
+          hashTag: element.data().hashTag,          
+          // TODO: imageUrl Check if it is array and send as it is
           // If it is string, covert to array
+          imageUrl: element.data().imageUrl,
+          likeCount: element.data().likeCount,
+          message: element.data().message,   
+          price: element.data().price,
+          place: element.data().place,
+          subject: element.data().subject,
           userId: element.data().userId,
-          // Passing same image as user image. Need to do DB join
+          // TODO: userImageUrl Passing same image as user image. Need to do DB join
           // Also we are going to have multiple images to post. In this case this
           // code should return first image
-          userImageUrl: element.data().imageUrl,
-          createdAt: element.data().createdAt,
-          likeCount: element.data().likeCount,
-          commentCount: element.data().commentCount,
+          userImageUrl: element.data().imageUrl,          
+          userName: element.data().userName,
         });
-      });
+      });      
+      return barks;
+    })
+    .then((data) => {
+      let imgUrls = [];      
+      const unique = [...new Set(data.map(item => item.userName))];
+      console.log("Unique users in Barks :", unique);         
+      return imgUrls;
+    })
+    .then((data) => {
+      // TODO: Need to figure out Async code as function is returning before user Images are retrieved
+      //data.forEach((elem) => {
+      //  console.log("Got image uri: ", elem);
+      //});
       return res.json(barks);
     })
     .catch((err) => {
@@ -103,16 +124,58 @@ exports.postBark = (req, res) => {
   }
 
   const newBark = {
-    message: req.body.message,
-    userName: req.user.userName,
-    imageUrl: req.body.imageUrl,
-    userId: req.user.userId,
+    commentCount: 0,
     //createdAt: admin.firestore.Timestamp.fromDate(new Date())
     createdAt: new Date().toISOString(),
+    imageUrl: req.body.imageUrl,
     likeCount: 0,
-    commentCount: 0,
+    message: req.body.message,
+    userId: req.user.userId,
+    userName: req.user.userName,
   };
+  
+  // Sanitize Bark Type
+  let value = req.body.barkCategory ? req.body.barkCategory.toUpperCase() : enumDefinations.barkCategory.GENERAL;
+  switch(value)
+  {
+    case enumDefinations.barkCategory.BUYSELL:
+    case enumDefinations.barkCategory.GENERAL:
+    case enumDefinations.barkCategory.LOSTANDFOUND:
+    case enumDefinations.barkCategory.QUESTION:   
+    case enumDefinations.barkCategory.RECOMMENDATION:    
+      newBark.barkCategory = value;
+      break;
+    default:
+      console.log("Bark Type ", value, " is incorrect for user ", newBark.userName, " Setting barkCategory as ", enumDefinations.barkCategory.GENERAL);
+      newBark.barkCategory =   enumDefinations.barkCategory.GENERAL;
+  }
 
+  // Sanitize other fields
+  if(req.body.eventDate)  // Can be Event Place
+  {
+    newBark.eventDate = req.body.eventDate;
+  }
+  if(req.body.hashTag)
+  {
+    newBark.hashTag = req.body.hashTag;
+  }
+  if(newBark.imageUrl && !Array.isArray(newBark.imageUrl))
+  {
+    return res.status(400).json({ body: "imageUrl must be an array" });
+  }
+  if(req.body.place) // Can be Event Place
+  {
+    newBark.place = req.body.place;
+  }
+  if(req.body.price && newBark.barkCategory === enumDefinations.barkCategory.BUYSELL) // This is for Buy Sell
+  {
+    newBark.price = req.body.price;
+  }  
+  if(req.body.subject)
+  {
+    newBark.subject = req.body.subject;
+  }
+ 
   console.log("Creating bark ", newBark);
 
   db.collection("barks")
