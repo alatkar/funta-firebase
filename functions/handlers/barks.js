@@ -126,13 +126,18 @@ exports.postBark = (req, res) => {
   const newBark = {
     commentCount: 0,
     //createdAt: admin.firestore.Timestamp.fromDate(new Date())
-    createdAt: new Date().toISOString(),
-    imageUrl: req.body.imageUrl,
+    createdAt: new Date().toISOString(),    
     likeCount: 0,
     message: req.body.message,
     userId: req.user.userId,
     userName: req.user.userName,
   };
+  
+  // imageUrl is optional
+  if(req.body.imageUrl)
+  {
+    newBark.imageUrl = req.body.imageUrl;
+  }
   
   // Sanitize Bark Type
   let value = req.body.barkCategory ? req.body.barkCategory.toUpperCase() : enumDefinations.barkCategory.GENERAL;
