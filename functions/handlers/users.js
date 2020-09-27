@@ -156,6 +156,36 @@ exports.getUserDetails = (req, res) => {
           barkId: doc.id,
         });
       });
+      return;
+    })
+    .then(() => {  //Get Pet Profiles  if present
+       console.log("userData..", userData);
+      if(userData.user.petProfiles)
+        return Promise.all( userData.user.petProfiles.map (petProfile => {
+          return db.doc(`/petprofiles/${petProfile.petProfileId}`).get()
+        }))})
+    .then((profiles) => {
+      //console.log("Pet profile..", profiles);
+      userData.user.petProfiles = [];
+      if(profiles) {
+        profiles.forEach((prof) => {
+          userData.user.petProfiles.push(prof.data());
+        })           
+      }
+    })
+    .then(() => { //Get Biz Profiles if present
+      if(userData.user.bizProfiles)
+        return Promise.all( userData.user.bizProfiles.map (bizProfile => {
+          return db.doc(`/bizprofiles/${bizProfile.bizProfileId}`).get()
+    }))})
+    .then((profiles) => {
+      //console.log("Biz profile..", profiles);
+      userData.user.bizProfiles = [];
+      if(profiles) {
+        profiles.forEach((prof) => {
+          userData.user.bizProfiles.push(prof.data());
+        })  
+      }
       return res.json(userData);
     })
     .catch((err) => {
