@@ -165,18 +165,18 @@ exports.getUserDetails = (req, res) => {
 };
 
 // Get user image
-exports.getUserImageUrl = async (req) => {
-  console.log("getUserImageUrl: getting data for :", req.params.userName);
-  db.doc(`/users/${req.params.userName}`)
+exports.getUserImageUrl = async (userName) => {
+  console.log("getUserImageUrl: getting data for :", userName);
+  return db.doc(`/users/${userName}`)
     .get()
-    .then((doc) => {
+    /*.then((doc) => {
       if (doc.exists) {        
         console.log("getUserImageUrl: found data ", doc.data().imageUrl);
         return doc.data().imageUrl;
       } 
       else
          return null;
-    })
+    })*/
     .catch((err) => {
       console.error("getUserImage Error ", err);
     });
@@ -227,6 +227,35 @@ exports.getAuthenticatedUser = (req, res) => {
           notificationId: doc.id,
         });
       });
+      return;
+    })
+    .then(() => {  //Get Pet Profiles  if present
+      if(userData.userDetails.petProfiles)
+        return Promise.all( userData.userDetails.petProfiles.map (petProfile => {
+          return db.doc(`/petprofiles/${petProfile.petProfileId}`).get()
+        }))})
+    .then((profiles) => {
+      //console.log("Pet profile..", profiles);
+      userData.userDetails.petProfiles = [];
+      if(profiles) {
+        profiles.forEach((prof) => {
+          userData.userDetails.petProfiles.push(prof.data());
+        })           
+      }
+    })
+    .then(() => { //Get Biz Profiles if present
+      if(userData.userDetails.bizProfiles)
+        return Promise.all( userData.userDetails.bizProfiles.map (bizProfile => {
+          return db.doc(`/bizprofiles/${bizProfile.bizProfileId}`).get()
+      }))})
+    .then((profiles) => {
+      //console.log("Biz profile..", profiles);
+      userData.userDetails.bizProfiles = [];
+      if(profiles) {
+        profiles.forEach((prof) => {
+          userData.userDetails.bizProfiles.push(prof.data());
+        })  
+      }
       return res.json(userData);
     })
     .catch((err) => {

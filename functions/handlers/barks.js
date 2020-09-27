@@ -27,10 +27,7 @@ exports.getAllBarks = (req, res) => {
           place: element.data().place,
           subject: element.data().subject,
           userId: element.data().userId,
-          // TODO: userImageUrl Passing same image as user image. Need to do DB join
-          // Also we are going to have multiple images to post. In this case this
-          // code should return first image
-          userImageUrl: element.data().imageUrl,          
+          //userImageUrl: element.data().imageUrl,    // This is populated at the bottom      
           userName: element.data().userName,
         });
       });      
@@ -40,13 +37,23 @@ exports.getAllBarks = (req, res) => {
       let imgUrls = [];      
       const unique = [...new Set(data.map(item => item.userName))];
       console.log("Unique users in Barks :", unique);         
-      return imgUrls;
-    })
+      return Promise.all(unique.map((userId => {
+        return getUserImageUrl(userId);
+      })));
+     })
     .then((data) => {
-      // TODO: Need to figure out Async code as function is returning before user Images are retrieved
-      //data.forEach((elem) => {
-      //  console.log("Got image uri: ", elem);
-      //});
+      // Create Map of userName to userImages
+      let map = [];
+      data.forEach((elem) => {
+        map[elem.data().userName] = elem.data().imageUrl;
+        console.log("Got image uri: ", elem.data().imageUrl);
+      });
+      barks.forEach(bark => {
+        if(map[bark.userName])
+        {
+          bark.userImageUrl = map[bark.userName];
+        }
+      });
       return res.json(barks);
     })
     .catch((err) => {
