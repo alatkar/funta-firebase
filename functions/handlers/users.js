@@ -146,7 +146,17 @@ exports.getUserDetails = (req, res) => {
     .then((data) => {
       userData.barks = [];
       data.forEach((doc) => {
-        userData.barks.push({
+        let barkCat = "GENERAL";
+        if(doc.data().barkCategory)
+        {
+          barkCat = doc.data().barkCategory;
+        }
+        let bark = doc.data();
+        bark.barkId= doc.id;
+        bark.barkCategory= barkCat;
+        userData.barks.push(
+          bark
+          /*{
           message: doc.data().body,
           createdAt: doc.data().createdAt,
           userName: doc.data().userHandle,
@@ -154,7 +164,7 @@ exports.getUserDetails = (req, res) => {
           likeCount: doc.data().likeCount,
           commentCount: doc.data().commentCount,
           barkId: doc.id,
-        });
+        }*/);
       });
       return;
     })
@@ -169,7 +179,9 @@ exports.getUserDetails = (req, res) => {
       userData.user.petProfiles = [];
       if(profiles) {
         profiles.forEach((prof) => {
-          userData.user.petProfiles.push(prof.data());
+          let profile = prof.data();
+          profile.petProfileId = prof.id;
+          userData.user.petProfiles.push(profile);
         })           
       }
     })
@@ -183,7 +195,9 @@ exports.getUserDetails = (req, res) => {
       userData.user.bizProfiles = [];
       if(profiles) {
         profiles.forEach((prof) => {
-          userData.user.bizProfiles.push(prof.data());
+          let profile = prof.data();
+          profile.bizProfileId = prof.id;
+          userData.user.bizProfiles.push(profile);
         })  
       }
       return res.json(userData);
@@ -269,7 +283,9 @@ exports.getAuthenticatedUser = (req, res) => {
       userData.userDetails.petProfiles = [];
       if(profiles) {
         profiles.forEach((prof) => {
-          userData.userDetails.petProfiles.push(prof.data());
+          let profile = prof.data();
+          profile.petProfileId = prof.id;
+          userData.userDetails.petProfiles.push(profile);
         })           
       }
     })
@@ -283,7 +299,9 @@ exports.getAuthenticatedUser = (req, res) => {
       userData.userDetails.bizProfiles = [];
       if(profiles) {
         profiles.forEach((prof) => {
-          userData.userDetails.bizProfiles.push(prof.data());
+          let profile = prof.data();
+          profile.bizProfileId = prof.id;
+          userData.userDetails.bizProfiles.push(profile);
         })  
       }
       return res.json(userData);

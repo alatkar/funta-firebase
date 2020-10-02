@@ -11,8 +11,14 @@ exports.getAllBarks = (req, res) => {
     .then((data) => {
       data.forEach((element) => {
         // TODO: Use spread syntax if it is allowed
+        let barkCat = "GENERAL";
+        if(element.data().barkCategory)
+        {
+          barkCat = element.data().barkCategory;
+        }
+
         barks.push({
-          barkCategory: element.data().subject,
+          barkCategory: barkCat,
           barkId: element.id,
           commentCount: element.data().commentCount,          
           createdAt: element.data().createdAt,
@@ -225,6 +231,13 @@ exports.getBark = (req, res) => {
       data.forEach((doc) => {
         barkData.comments.push(doc.data());
       });
+      return getUserImageUrl(barkData.userName);
+    })
+    .then((data) => {
+      if(data)
+      {
+        barkData.userImageUrl = data.data().imageUrl;
+      }
       return res.json(barkData);
     })
     .catch((err) => {

@@ -61,7 +61,7 @@ app.get("/user/:userName", getUserDetails);
 app.post("/notifications", fireBaseAuth, markNotificationsRead);
 
 // Pet Profile Route
-app.get("/petprofile/:petProfileId", fireBaseAuth, getPetProfile);
+app.get("/petprofile/:petProfileId", /*fireBaseAuth,*/ getPetProfile);
 app.post("/petprofile", fireBaseAuth, fireBaseAuth, postPetProfile);
 app.post("/profile/image", fireBaseAuth, uploadProfileImage);
 // app.get("/petprofile/:profileName", fireBaseAuth, getPetProfile); //Don't need this
@@ -69,7 +69,7 @@ app.post("/profile/image", fireBaseAuth, uploadProfileImage);
 //app.delete("/petprofile/:profileName", fireBaseAuth, deletePetProfile);
 
 // Biz Profile Route
-app.get("/bizprofile/:bizProfileId", fireBaseAuth, getBizProfile);
+app.get("/bizprofile/:bizProfileId", /*fireBaseAuth,*/ getBizProfile);
 app.post("/bizprofile", fireBaseAuth, postBizProfile);
 
 
