@@ -154,6 +154,7 @@ exports.getUserDetails = (req, res) => {
         let bark = doc.data();
         bark.barkId= doc.id;
         bark.barkCategory= barkCat;
+        bark.userImageUrl = userData.user.imageUrl;
         userData.barks.push(
           bark
           /*{
@@ -193,7 +194,7 @@ exports.getUserDetails = (req, res) => {
     .then((profiles) => {
       //console.log("Biz profile..", profiles);
       userData.user.bizProfiles = [];
-      if(profiles) {
+      if(profiles) {        
         profiles.forEach((prof) => {
           let profile = prof.data();
           profile.bizProfileId = prof.id;

@@ -86,3 +86,41 @@ exports.postBizProfile = (req, res) => {
         res.status(500).json({ error: `postbizProfile: Something went wrong ${err.message}` });
       });
   };
+
+ // Delete a biz profile 
+ // TODO: Delete image
+exports.deleteBizProfile = (req, res) => {
+  console.log(`Deleting BizProfile: ${req.params.bizProfileId}`);
+  const document = db.doc(`/bizprofiles/${req.params.bizProfileId}`);
+  document
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: 'BizProfile not found' });
+      }
+      if (doc.data().userName !== req.user.userName) {
+        return res.status(403).json({ error: "Unauthorized. Can not delete other user's BizProfile" });
+      } else {
+        // TODO: ALso delete likes.
+        return document.delete();
+      }
+    })
+    .then(() => { //Update user      
+      db.doc(`/users/${req.user.userName}`)
+        .get()
+        .then((doc) => {
+          console.log(`Updating user BizProfile: ${req.params.bizProfileId}`);
+          
+          return doc.ref.update({
+            bizProfiles: doc.data().bizProfiles.filter(v => v.bizProfileId != `${req.params.bizProfileId}`)
+          })
+        })
+    })
+    .then(() => {
+      res.json({ message: 'BizProfile deleted successfully' });
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
+};

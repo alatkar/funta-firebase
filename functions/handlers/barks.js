@@ -220,6 +220,13 @@ exports.getBark = (req, res) => {
       }
       barkData = doc.data();
       barkData.barkId = doc.id;
+      let barkCat = "GENERAL";
+      if(barkData.barkCategory)
+      {
+          barkCat = barkData.barkCategory;
+      }
+      barkData.barkCategory = barkCat;
+
       return db
         .collection("comments")
         .orderBy("createdAt", "desc") //fails with Index error

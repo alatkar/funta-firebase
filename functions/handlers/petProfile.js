@@ -147,3 +147,41 @@ exports.uploadProfileImage = (req, res) => {
     });
     busboy.end(req.rawBody);
   };
+
+  // Delete a pet profile 
+ // TODO: Delete image
+exports.deletePetProfile = (req, res) => {
+  console.log(`Deleting PetProfile: ${req.params.petProfileId}`);
+  const document = db.doc(`/petprofiles/${req.params.petProfileId}`);
+  document
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: 'PetProfile not found' });
+      }
+      if (doc.data().userName !== req.user.userName) {
+        return res.status(403).json({ error: "Unauthorized. Can not delete other user's PetProfile" });
+      } else {
+        // TODO: ALso delete likes.
+        return document.delete();
+      }
+    })
+    .then(() => { //Update user      
+      db.doc(`/users/${req.user.userName}`)
+        .get()
+        .then((doc) => {
+          console.log(`Updating user PetProfile: ${req.params.petProfileId}`);
+          
+          return doc.ref.update({
+            petProfiles: doc.data().petProfiles.filter(v => v.petProfileId != `${req.params.petProfileId}`)
+          })
+        })
+    })
+    .then(() => {
+      res.json({ message: 'PetProfile deleted successfully' });
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
+};
