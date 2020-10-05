@@ -30,11 +30,13 @@ const {
 const {
   getPetProfile,
   postPetProfile,
-  uploadProfileImage
+  uploadProfileImage,
+  deletePetProfile
 } = require("./handlers/petProfile");
 const {
   getBizProfile,
-  postBizProfile
+  postBizProfile,
+  deleteBizProfile
 } = require("./handlers/bizProfile");
 
 ///// APIS /////
@@ -64,6 +66,7 @@ app.post("/notifications", fireBaseAuth, markNotificationsRead);
 app.get("/petprofile/:petProfileId", /*fireBaseAuth,*/ getPetProfile);
 app.post("/petprofile", fireBaseAuth, fireBaseAuth, postPetProfile);
 app.post("/profile/image", fireBaseAuth, uploadProfileImage);
+app.delete("/petprofile/:petProfileId", fireBaseAuth, deletePetProfile);
 // app.get("/petprofile/:profileName", fireBaseAuth, getPetProfile); //Don't need this
 //app.get("/petprofile/:userName/:profileName", getPetProfilePublic); //Public API
 //app.delete("/petprofile/:profileName", fireBaseAuth, deletePetProfile);
@@ -71,7 +74,7 @@ app.post("/profile/image", fireBaseAuth, uploadProfileImage);
 // Biz Profile Route
 app.get("/bizprofile/:bizProfileId", /*fireBaseAuth,*/ getBizProfile);
 app.post("/bizprofile", fireBaseAuth, postBizProfile);
-
+app.delete("/bizprofile/:bizProfileId", fireBaseAuth, deleteBizProfile);
 
 
 // Export Route starting with api as /api/barks
