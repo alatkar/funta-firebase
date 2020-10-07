@@ -148,8 +148,8 @@ exports.uploadProfileImage = (req, res) => {
     busboy.end(req.rawBody);
   };
 
-  // Delete a pet profile 
- // TODO: Delete image
+// Delete a pet profile 
+// TODO: Delete image
 exports.deletePetProfile = (req, res) => {
   console.log(`Deleting PetProfile: ${req.params.petProfileId}`);
   const document = db.doc(`/petprofiles/${req.params.petProfileId}`);
@@ -179,6 +179,46 @@ exports.deletePetProfile = (req, res) => {
     })
     .then(() => {
       res.json({ message: 'PetProfile deleted successfully' });
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
+};
+
+exports.patchPetProfile = (req, res) => {
+  //console.log(`Patching PetProfile Body: ${Object.keys(req.body)}`);
+  const document = db.doc(`/petprofiles/${req.params.petProfileId}`);
+  document
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: 'PetProfile not found' });
+      }
+      if (doc.data().userName !== req.user.userName) {
+        return res.status(403).json({ error: "Unauthorized. Can not update other user's PetProfile" });
+      } else {
+        return doc;
+      }
+    })
+    .then((doc) => { //Update user  
+      console.log("Doc data: ", doc.data());
+      // TODO: Validating if fields exist. We might need to allow to enter fields
+      for (const [key, value] of Object.entries(req.body)) {
+        if(key === "imageUrl") { //Allow imageUrl to be inserted if not present
+          continue;
+        }
+        if(!doc.data().hasOwnProperty(key))
+        {
+            // TODO: Return causing error
+            return res.status(404).json({ error: `PetProfile property ${key} not found` });
+        }
+        //console.log(`${key}: ${value}`);
+      }      
+      return doc.ref.update(req.body)      
+    })
+    .then(() => {
+      res.json(`Pet Profile ${req.params.petProfileId} updated successfully`);
     })
     .catch((err) => {
       console.error(err);

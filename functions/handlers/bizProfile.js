@@ -124,3 +124,43 @@ exports.deleteBizProfile = (req, res) => {
       return res.status(500).json({ error: err.code });
     });
 };
+
+exports.patchBizProfile = (req, res) => {
+  //console.log(`Patching PetProfile Body: ${Object.keys(req.body)}`);
+  const document = db.doc(`/bizprofiles/${req.params.bizProfileId}`);
+  document
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: 'BizProfile not found' });
+      }
+      if (doc.data().userName !== req.user.userName) {
+        return res.status(403).json({ error: "Unauthorized. Can not update other user's BizProfile" });
+      } else {
+        return doc;
+      }
+    })
+    .then((doc) => { //Update user  
+      console.log("Doc data: ", doc.data());
+      // TODO: Validating if fields exist. We might need to allow to enter fields
+      for (const [key, value] of Object.entries(req.body)) {
+        if(key === "imageUrl") { //Allow imageUrl to be inserted if not present
+          continue;
+        }
+        if(!doc.data().hasOwnProperty(key))
+        {
+          // TODO: Return causing error
+          return res.status(404).json({ error: `BizProfile property ${key} not found` });
+        }
+        //console.log(`${key}: ${value}`);
+      }      
+      return doc.ref.update(req.body)      
+    })
+    .then(() => {
+      res.json(`Biz Profile ${req.params.bizProfileId} updated successfully`);
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
+};

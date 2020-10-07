@@ -29,12 +29,14 @@ const {
 } = require("./handlers/users");
 const {
   getPetProfile,
+  patchPetProfile,
   postPetProfile,
   uploadProfileImage,
   deletePetProfile
 } = require("./handlers/petProfile");
 const {
   getBizProfile,
+  patchBizProfile,
   postBizProfile,
   deleteBizProfile
 } = require("./handlers/bizProfile");
@@ -64,6 +66,7 @@ app.post("/notifications", fireBaseAuth, markNotificationsRead);
 
 // Pet Profile Route
 app.get("/petprofile/:petProfileId", /*fireBaseAuth,*/ getPetProfile);
+app.patch("/petprofile/:petProfileId", fireBaseAuth, patchPetProfile);
 app.post("/petprofile", fireBaseAuth, fireBaseAuth, postPetProfile);
 app.post("/profile/image", fireBaseAuth, uploadProfileImage);
 app.delete("/petprofile/:petProfileId", fireBaseAuth, deletePetProfile);
@@ -73,9 +76,9 @@ app.delete("/petprofile/:petProfileId", fireBaseAuth, deletePetProfile);
 
 // Biz Profile Route
 app.get("/bizprofile/:bizProfileId", /*fireBaseAuth,*/ getBizProfile);
+app.patch("/bizprofile/:bizProfileId", fireBaseAuth, patchBizProfile);
 app.post("/bizprofile", fireBaseAuth, postBizProfile);
 app.delete("/bizprofile/:bizProfileId", fireBaseAuth, deleteBizProfile);
-
 
 // Export Route starting with api as /api/barks
 exports.api = functions.https.onRequest(app);
