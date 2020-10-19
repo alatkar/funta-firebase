@@ -7,6 +7,7 @@ exports.getAllBarks = (req, res) => {
   let barks = [];
   db.collection("barks")
     .orderBy("createdAt", "desc")
+    .limit(15)
     .get()
     .then((data) => {
       data.forEach((element) => {

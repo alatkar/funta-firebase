@@ -40,6 +40,13 @@ const {
   postBizProfile,
   deleteBizProfile
 } = require("./handlers/bizProfile");
+const {
+  getBizProduct,
+  patchBizProduct,
+  postBizProduct,
+  uploadProductImage,
+  deleteBizProduct
+} = require("./handlers/bizProduct");
 
 ///// APIS /////
 
@@ -79,6 +86,13 @@ app.get("/bizprofile/:bizProfileId", /*fireBaseAuth,*/ getBizProfile);
 app.patch("/bizprofile/:bizProfileId", fireBaseAuth, patchBizProfile);
 app.post("/bizprofile", fireBaseAuth, postBizProfile);
 app.delete("/bizprofile/:bizProfileId", fireBaseAuth, deleteBizProfile);
+
+// Biz Product
+app.post("/product/image", fireBaseAuth, uploadProductImage);
+app.get("/product/:productId", getBizProduct);
+app.patch("/product/:productId", fireBaseAuth, patchBizProduct);
+app.post("/product/:bizProfileId", fireBaseAuth, postBizProduct);  //Needs to know the profile this product belongs
+app.delete("/product/:productId", fireBaseAuth, deleteBizProduct);
 
 // Export Route starting with api as /api/barks
 exports.api = functions.https.onRequest(app);
