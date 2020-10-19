@@ -386,6 +386,56 @@ exports.unlikeBark = (req, res) => {
     });
 };
 
+// Patch a bark
+exports.patchBark = (req, res) => {
+  console.log(`Patching Bark. Body: ${Object.keys(req.body)} Bark ${req.params.barkId}`);
+  const document = db.doc(`/barks/${req.params.barkId}`);
+  document
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: "Bark not found" });
+      }
+      if (doc.data().userName !== req.user.userName) {
+        return res
+          .status(403)
+          .json({
+            error: "Unauthorized. Can not update other user's Bark",
+          });
+      } else {
+        return doc;
+      }
+    })
+    .then((doc) => {
+      console.log("Doc data: ", doc.data());
+      // TODO: Validating if fields exist. We might need to allow to enter fields
+      for (const [key, value] of Object.entries(req.body)) {
+        if (key === "imageUrl") 
+        {
+          if(!Array.isArray(value))
+          {
+            return res.status(400).json({ body: "imageUrl must be an array" });
+          }
+          //Allow imageUrl to be inserted if not present
+          continue;
+        }
+        if (!doc.data().hasOwnProperty(key)) {
+          // TODO: Return causing error
+          return res
+            .status(404)
+            .json({ error: `Bark property ${key} not found` });
+        }
+      }
+      return doc.ref.update(req.body);
+    })
+    .then(() => {
+      res.json(`Bark ${req.params.barkId} updated successfully`);
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
+};
 
 // Delete a bark
 exports.deleteBark = (req, res) => {

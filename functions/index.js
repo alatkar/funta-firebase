@@ -13,6 +13,7 @@ const {
   getAllBarks,
   uploadBarkImage,
   postBark,
+  patchBark,
   deleteBark,
   commentOnBark,
   likeBark,
@@ -54,6 +55,7 @@ const {
 app.get("/barks", getAllBarks);
 app.post("/barks", fireBaseAuth, postBark);
 app.post("/barks/image", fireBaseAuth, uploadBarkImage);
+app.patch("/barks/:barkId", fireBaseAuth, patchBark);
 app.get("/barks/:barkId", getBark);
 app.delete("/barks/:barkId", fireBaseAuth, deleteBark);
 
