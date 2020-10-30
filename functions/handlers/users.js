@@ -330,7 +330,7 @@ exports.addUserDetails = (req, res) => {
 };
 
 // Upload a profile image for user
-exports.uploadImage = (req, res) => {
+exports.uploadUserImage = (req, res) => {
   const BusBoy = require("busboy");
   const path = require("path");
   const os = require("os");

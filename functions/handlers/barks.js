@@ -1,7 +1,7 @@
 const { admin, db } = require("../util/admin");
 const config = require("../util/config");
 const enumDefinations = require("../util/enums");
-const { getUserImageUrl} = require("./users");
+const { getUserImageUrl } = require("./users");
 
 exports.getAllBarks = (req, res) => {
   let barks = [];
@@ -13,41 +13,42 @@ exports.getAllBarks = (req, res) => {
       data.forEach((element) => {
         // TODO: Use spread syntax if it is allowed
         let barkCat = "GENERAL";
-        if(element.data().barkCategory)
-        {
+        if (element.data().barkCategory) {
           barkCat = element.data().barkCategory;
         }
 
         barks.push({
           barkCategory: barkCat,
           barkId: element.id,
-          commentCount: element.data().commentCount,          
+          commentCount: element.data().commentCount,
           createdAt: element.data().createdAt,
           eventDate: element.data().eventDate,
-          hashTag: element.data().hashTag,          
+          hashTag: element.data().hashTag,
           // TODO: imageUrl Check if it is array and send as it is
           // If it is string, covert to array
           imageUrl: element.data().imageUrl,
           likeCount: element.data().likeCount,
-          message: element.data().message,   
+          message: element.data().message,
           price: element.data().price,
           place: element.data().place,
           subject: element.data().subject,
           userId: element.data().userId,
-          //userImageUrl: element.data().imageUrl,    // This is populated at the bottom      
+          //userImageUrl: element.data().imageUrl,    // This is populated at the bottom
           userName: element.data().userName,
         });
-      });      
+      });
       return barks;
     })
     .then((data) => {
-      let imgUrls = [];      
-      const unique = [...new Set(data.map(item => item.userName))];
-      console.log("Unique users in Barks :", unique);         
-      return Promise.all(unique.map((userId => {
-        return getUserImageUrl(userId);
-      })));
-     })
+      let imgUrls = [];
+      const unique = [...new Set(data.map((item) => item.userName))];
+      console.log("Unique users in Barks :", unique);
+      return Promise.all(
+        unique.map((userId) => {
+          return getUserImageUrl(userId);
+        })
+      );
+    })
     .then((data) => {
       // Create Map of userName to userImages
       let map = [];
@@ -55,9 +56,8 @@ exports.getAllBarks = (req, res) => {
         map[elem.data().userName] = elem.data().imageUrl;
         console.log("Got image uri: ", elem.data().imageUrl);
       });
-      barks.forEach(bark => {
-        if(map[bark.userName])
-        {
+      barks.forEach((bark) => {
+        if (map[bark.userName]) {
           bark.userImageUrl = map[bark.userName];
         }
       });
@@ -140,61 +140,69 @@ exports.postBark = (req, res) => {
   const newBark = {
     commentCount: 0,
     //createdAt: admin.firestore.Timestamp.fromDate(new Date())
-    createdAt: new Date().toISOString(),    
+    createdAt: new Date().toISOString(),
     likeCount: 0,
     message: req.body.message,
     userId: req.user.userId,
     userName: req.user.userName,
   };
-  
+
   // imageUrl is optional
-  if(req.body.imageUrl)
-  {
+  if (req.body.imageUrl) {
     newBark.imageUrl = req.body.imageUrl;
   }
-  
+
   // Sanitize Bark Type
-  let value = req.body.barkCategory ? req.body.barkCategory.toUpperCase() : enumDefinations.barkCategory.GENERAL;
-  switch(value)
-  {
+  let value = req.body.barkCategory
+    ? req.body.barkCategory.toUpperCase()
+    : enumDefinations.barkCategory.GENERAL;
+  switch (value) {
     case enumDefinations.barkCategory.BUYSELL:
     case enumDefinations.barkCategory.GENERAL:
     case enumDefinations.barkCategory.LOSTANDFOUND:
-    case enumDefinations.barkCategory.QUESTION:   
-    case enumDefinations.barkCategory.RECOMMENDATION:    
+    case enumDefinations.barkCategory.QUESTION:
+    case enumDefinations.barkCategory.RECOMMENDATION:
+    case enumDefinations.barkCategory.EVENT:
       newBark.barkCategory = value;
       break;
     default:
-      console.log("Bark Type ", value, " is incorrect for user ", newBark.userName, " Setting barkCategory as ", enumDefinations.barkCategory.GENERAL);
-      newBark.barkCategory =   enumDefinations.barkCategory.GENERAL;
+      console.log(
+        "Bark Type ",
+        value,
+        " is incorrect for user ",
+        newBark.userName,
+        " Setting barkCategory as ",
+        enumDefinations.barkCategory.GENERAL
+      );
+      newBark.barkCategory = enumDefinations.barkCategory.GENERAL;
   }
 
   // Sanitize other fields
-  if(req.body.eventDate)  // Can be Event Place
-  {
+  if (req.body.eventDate) {
+    // Can be Event Place
     newBark.eventDate = req.body.eventDate;
   }
-  if(req.body.hashTag)
-  {
+  if (req.body.hashTag) {
     newBark.hashTag = req.body.hashTag;
   }
-  if(newBark.imageUrl && !Array.isArray(newBark.imageUrl))
-  {
+  if (newBark.imageUrl && !Array.isArray(newBark.imageUrl)) {
     return res.status(400).json({ body: "imageUrl must be an array" });
   }
-  if(req.body.place) // Can be Event Place
-  {
+  if (req.body.place) {
+    // Can be Event Place
     newBark.place = req.body.place;
   }
-  if(req.body.price && newBark.barkCategory === enumDefinations.barkCategory.BUYSELL) // This is for Buy Sell
-  {
+  if (
+    req.body.price &&
+    newBark.barkCategory === enumDefinations.barkCategory.BUYSELL
+  ) {
+    // This is for Buy Sell
     newBark.price = req.body.price;
-  }  
-  if(req.body.subject)
-  {
+  }
+  if (req.body.subject) {
     newBark.subject = req.body.subject;
   }
- 
+
   console.log("Creating bark ", newBark);
 
   db.collection("barks")
@@ -222,9 +230,8 @@ exports.getBark = (req, res) => {
       barkData = doc.data();
       barkData.barkId = doc.id;
       let barkCat = "GENERAL";
-      if(barkData.barkCategory)
-      {
-          barkCat = barkData.barkCategory;
+      if (barkData.barkCategory) {
+        barkCat = barkData.barkCategory;
       }
       barkData.barkCategory = barkCat;
 
@@ -237,13 +244,14 @@ exports.getBark = (req, res) => {
     .then((data) => {
       barkData.comments = [];
       data.forEach((doc) => {
-        barkData.comments.push(doc.data());
+        let commentToPush = doc.data();
+        commentToPush.commentId = doc.id;
+        barkData.comments.push(commentToPush);
       });
       return getUserImageUrl(barkData.userName);
     })
     .then((data) => {
-      if(data)
-      {
+      if (data) {
         barkData.userImageUrl = data.data().imageUrl;
       }
       return res.json(barkData);
@@ -275,7 +283,7 @@ exports.commentOnBark = (req, res) => {
       if (!doc.exists) {
         return res.status(404).json({ error: "Bark not found" });
       }
-      return doc.ref.update({commentCount: doc.data().commentCount + 1})
+      return doc.ref.update({ commentCount: doc.data().commentCount + 1 });
     })
     .then(() => {
       return db.collection("comments").add(newComment);
@@ -366,7 +374,7 @@ exports.unlikeBark = (req, res) => {
       if (data.empty) {
         return res.status(400).json({ error: "Bark not liked" });
       } else {
-        console.log('Liked Doc: ', data.docs[0], data.docs[0].id)
+        console.log("Liked Doc: ", data.docs[0], data.docs[0].id);
         return db
           .doc(`/likes/${data.docs[0].id}`)
           .delete()
@@ -388,7 +396,9 @@ exports.unlikeBark = (req, res) => {
 
 // Patch a bark
 exports.patchBark = (req, res) => {
-  console.log(`Patching Bark. Body: ${Object.keys(req.body)} Bark ${req.params.barkId}`);
+  console.log(
+    `Patching Bark. Body: ${Object.keys(req.body)} Bark ${req.params.barkId}`
+  );
   const document = db.doc(`/barks/${req.params.barkId}`);
   document
     .get()
@@ -397,11 +407,9 @@ exports.patchBark = (req, res) => {
         return res.status(404).json({ error: "Bark not found" });
       }
       if (doc.data().userName !== req.user.userName) {
-        return res
-          .status(403)
-          .json({
-            error: "Unauthorized. Can not update other user's Bark",
-          });
+        return res.status(403).json({
+          error: "Unauthorized. Can not update other user's Bark",
+        });
       } else {
         return doc;
       }
@@ -409,24 +417,27 @@ exports.patchBark = (req, res) => {
     .then((doc) => {
       console.log("Doc data: ", doc.data());
       // TODO: Validating if fields exist. We might need to allow to enter fields
+
+      var fields = {};
       for (const [key, value] of Object.entries(req.body)) {
-        if (key === "imageUrl") 
-        {
-          if(!Array.isArray(value))
-          {
+        if (key === "imageUrl") {
+          if (!Array.isArray(value)) {
             return res.status(400).json({ body: "imageUrl must be an array" });
           }
           //Allow imageUrl to be inserted if not present
-          continue;
+          //continue;
         }
-        if (!doc.data().hasOwnProperty(key)) {
+        /*if (!doc.data().hasOwnProperty(key)) {
           // TODO: Return causing error
           return res
             .status(404)
             .json({ error: `Bark property ${key} not found` });
+        }*/
+        if (value != null && value !== "") {
+          fields[key] = value;
         }
       }
-      return doc.ref.update(req.body);
+      return doc.ref.update(fields);
     })
     .then(() => {
       res.json(`Bark ${req.params.barkId} updated successfully`);
@@ -445,17 +456,20 @@ exports.deleteBark = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: 'Bark not found' });
+        return res.status(404).json({ error: "Bark not found" });
       }
       if (doc.data().userName !== req.user.userName) {
-        return res.status(403).json({ error: "Unauthorized. Can not delete other user's bark" });
+        return res
+          .status(403)
+          .json({ error: "Unauthorized. Can not delete other user's bark" });
       } else {
         // TODO: ALso delete likes.
+        // TODO: Also delete comments
         return document.delete();
       }
     })
     .then(() => {
-      res.json({ message: 'Bark deleted successfully' });
+      res.json({ message: "Bark deleted successfully" });
     })
     .catch((err) => {
       console.error(err);

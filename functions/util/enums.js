@@ -24,6 +24,7 @@ module.exports ={
         GENERAL: 'GENERAL',
         LOSTANDFOUND: 'LOSTANDFOUND',        
         QUESTION: 'QUESTION', /* Or Suggestion? Advice?*/
-        RECOMMENDATION: 'RECOMMENDATION',        
+        RECOMMENDATION: 'RECOMMENDATION', 
+        EVENT: 'EVENT',        
     }
 }

@@ -1,3 +1,5 @@
+const storage = require("firebase/storage");
+
 const admin = require("firebase-admin");
 
 var serviceAccount = require("./serviceAccountKey.json");

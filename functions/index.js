@@ -20,10 +20,14 @@ const {
   unlikeBark,
 } = require("./handlers/barks");
 const {
+  patchComment,
+  deleteComment
+} = require("./handlers/comments");
+const {
   loginUser,
   signupUser,
   getAuthenticatedUser,
-  uploadImage,
+  uploadUserImage,
   addUserDetails,
   getUserDetails,
   markNotificationsRead,
@@ -48,6 +52,31 @@ const {
   uploadProductImage,
   deleteBizProduct
 } = require("./handlers/bizProduct");
+const {
+  getAllNews,
+  getNews,
+  postNews,
+  patchNews,
+  deleteNews
+} = require("./handlers/news");
+const {
+  getAllResources,
+  getResource,
+  postResource,
+  patchResource,
+  deleteResource
+} = require("./handlers/resources");
+
+const {
+  uploadImage
+} = require("./handlers/images");
+
+
+const {
+  getPersonalPetProfile,
+  getPersonalProducts,
+  getPersonalServices
+} = require("./handlers/personalization");
 
 ///// APIS /////
 
@@ -63,11 +92,15 @@ app.post("/barks/:barkId/comment", fireBaseAuth, commentOnBark);
 app.get("/barks/:barkId/like", fireBaseAuth, likeBark); //Actually updates
 app.get("/barks/:barkId/unlike", fireBaseAuth, unlikeBark); //Actually updates
 
+// Comments
+app.patch("/comments/:commentId", fireBaseAuth, patchComment);
+app.delete("/comments/:commentId", fireBaseAuth, deleteComment);
+
 // Users route
 app.get("/user", fireBaseAuth, getAuthenticatedUser);
 app.post("/signup", signupUser);
 app.post("/login", loginUser);
-app.post("/user/image", fireBaseAuth, uploadImage);
+app.post("/user/image", fireBaseAuth, uploadUserImage);
 app.post("/user", fireBaseAuth, addUserDetails);
 app.get("/user/:userName", getUserDetails);
 
@@ -95,6 +128,28 @@ app.get("/product/:productId", getBizProduct);
 app.patch("/product/:productId", fireBaseAuth, patchBizProduct);
 app.post("/product/:bizProfileId", fireBaseAuth, postBizProduct);  //Needs to know the profile this product belongs
 app.delete("/product/:productId", fireBaseAuth, deleteBizProduct);
+
+// Get News routes
+app.get("/news", getAllNews);
+app.get("/news/:newsId", getNews);
+app.post("/news", fireBaseAuth, postNews);
+app.patch("/news/:newsId", fireBaseAuth, patchNews);
+app.delete("/news/:newsId", fireBaseAuth, deleteNews);
+
+// Get Resources routes
+app.get("/resource", getAllResources);
+app.get("/resource/:resourceId", getResource);
+app.post("/resource", fireBaseAuth, postResource);
+app.patch("/resource/:resourceId", fireBaseAuth, patchResource);
+app.delete("/resource/:resourceId", fireBaseAuth, deleteResource);
+
+// Images
+app.post("/image/:imageType", fireBaseAuth, uploadImage);
+
+// Personalization
+app.get("/personalization/profiles", getPersonalPetProfile);
+app.get("/personalization/products", getPersonalProducts);
+app.get("/personalization/services", getPersonalServices);
 
 // Export Route starting with api as /api/barks
 exports.api = functions.https.onRequest(app);
