@@ -31,6 +31,9 @@ const {
   addUserDetails,
   getUserDetails,
   markNotificationsRead,
+  sendPassWordResetEmail,
+  patchUser,
+  getUserByEmail
 } = require("./handlers/users");
 const {
   getPetProfile,
@@ -78,6 +81,18 @@ const {
   getPersonalServices
 } = require("./handlers/personalization");
 
+const {
+  postContactus,
+  getContactus,
+  getAllContactus
+} = require("./handlers/contactus");
+
+const {
+  postHelp,
+  getHelp,
+  getAllHelp
+} = require("./handlers/help")
+
 ///// APIS /////
 
 // Get Barks routes
@@ -102,7 +117,10 @@ app.post("/signup", signupUser);
 app.post("/login", loginUser);
 app.post("/user/image", fireBaseAuth, uploadUserImage);
 app.post("/user", fireBaseAuth, addUserDetails);
+app.patch("/user", fireBaseAuth, patchUser);
+app.get("/user/getuserbyemail/:email", getUserByEmail);
 app.get("/user/:userName", getUserDetails);
+app.post("/user/resetpassword/:email", sendPassWordResetEmail);
 
 app.post("/notifications", fireBaseAuth, markNotificationsRead);
 
@@ -150,6 +168,16 @@ app.post("/image/:imageType", fireBaseAuth, uploadImage);
 app.get("/personalization/profiles", getPersonalPetProfile);
 app.get("/personalization/products", getPersonalProducts);
 app.get("/personalization/services", getPersonalServices);
+
+// Contact Us
+app.get("/contactus/:contactusId", fireBaseAuth, getContactus);
+app.get("/contactus", fireBaseAuth, getAllContactus);
+app.post("/contactus", fireBaseAuth, postContactus);
+
+// Help
+app.get("/help/:helpId", fireBaseAuth, getHelp);
+app.get("/help", fireBaseAuth, getAllHelp);
+app.post("/help", fireBaseAuth, postHelp);
 
 // Export Route starting with api as /api/barks
 exports.api = functions.https.onRequest(app);
