@@ -9,7 +9,7 @@ exports.getBizProfile = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Biz Profile not found" });
+        return res.status(404).json({ message: "Biz Profile not found" });
       }
       bizProfile = doc.data();
       bizProfile.bizProfileId = doc.id;
@@ -33,11 +33,11 @@ exports.getBizProfile = (req, res) => {
           bizProfile.products.push(prod);
         });
       }
-      return res.json(bizProfile);
+      return res.json({response: bizProfile});
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ errorCode: err.code, errordetails: err.details });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -46,7 +46,7 @@ exports.postBizProfile = (req, res) => {
 
   //if (req.body.body.trim() === '') // Doesn't work
   if (req.body.bizProfileName.trim() === "") {
-    return res.status(400).json({ body: "Biz Profile Name must not be empty" });
+    return res.status(400).json({ message: "Biz Profile Name must not be empty" });
   }
 
   const bizProfile = {
@@ -63,7 +63,7 @@ exports.postBizProfile = (req, res) => {
   if (req.body.imageUrl) {
     if (Array.isArray(req.body.imageUrl)) {
       // Should be string not array
-      return res.status(400).json({ body: "imageUrl must be a string" });
+      return res.status(400).json({ message: "imageUrl must be a string" });
     }
     bizProfile.imageUrl = req.body.imageUrl;
   }
@@ -105,14 +105,14 @@ exports.postBizProfile = (req, res) => {
             bizProfileName: bizProfile.bizProfileName,
           });
           doc.ref.update({ bizProfiles: existingProfiles });
-          return res.json(bizProfile);
+          return res.json({response: bizProfile});
         });
     })
     .catch((err) => {
       console.error(err);
       res
         .status(500)
-        .json({ error: `postbizProfile: Something went wrong ${err.message}` });
+        res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -126,11 +126,11 @@ exports.deleteBizProfile = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "BizProfile not found" });
+        return res.status(404).json({ message: "BizProfile not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res.status(403).json({
-          error: "Unauthorized. Can not delete other user's BizProfile",
+          message: "Unauthorized. Can not delete other user's BizProfile",
         });
       } else {
         // TODO: Delete Products
@@ -167,7 +167,7 @@ exports.deleteBizProfile = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -178,11 +178,11 @@ exports.patchBizProfile = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "BizProfile not found" });
+        return res.status(404).json({ message: "BizProfile not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res.status(403).json({
-          error: "Unauthorized. Can not update other user's BizProfile",
+          message: "Unauthorized. Can not update other user's BizProfile",
         });
       } else {
         return doc;
@@ -201,17 +201,17 @@ exports.patchBizProfile = (req, res) => {
           // TODO: Return causing error
           return res
             .status(404)
-            .json({ error: `BizProfile property ${key} not found` });
+            .json({ message: `BizProfile property ${key} not found` });
         }
         //console.log(`${key}: ${value}`);
       }
       return doc.ref.update(req.body);
     })
     .then(() => {
-      res.json(`Biz Profile ${req.params.bizProfileId} updated successfully`);
+      res.json({message: `Biz Profile ${req.params.bizProfileId} updated successfully`});
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };

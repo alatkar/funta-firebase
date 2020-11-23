@@ -18,11 +18,11 @@ exports.getPersonalPetProfile = (req, res) => {
       return petProfile;
     })
     .then( (data) => {
-        res.json(data);
+        res.json({response: data});
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ errorCode: err.code, errordetails: err.details });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -43,11 +43,11 @@ exports.getPersonalProducts = (req, res) => {
         return products;
       })
       .then( (data) => {
-          res.json(data);
+          res.json({response: data});
       })
       .catch((err) => {
         console.error(err);
-        res.status(500).json({ errorCode: err.code, errordetails: err.details });
+        res.status(500).json({ message: `${err}` });
       });
   };
 
@@ -68,10 +68,10 @@ exports.getPersonalProducts = (req, res) => {
         return products;
       })
       .then( (data) => {
-          res.json(data);
+          res.json({response: data});
       })
       .catch((err) => {
         console.error(err);
-        res.status(500).json({ errorCode: err.code, errordetails: err.details });
+        res.status(500).json({ message: `${err}` });
       });
   };

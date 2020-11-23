@@ -47,11 +47,11 @@ exports.getAllResources = (req, res) => {
           resourceItem.userImageUrl = map[resourceItem.userName];
         }
       });
-      return res.json(resources);
+      return res.json({response: resources});
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -63,7 +63,7 @@ exports.getResource = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Resource Item not found" });
+        return res.status(404).json({ message: "Resource Item not found" });
       }
       resource = doc.data();
       resource.resourceId = doc.id;
@@ -73,11 +73,11 @@ exports.getResource = (req, res) => {
       if (data) {
         resource.userImageUrl = data.data().imageUrl;
       }
-      return res.json(resource);
+      return res.json({response: resource});
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ errorCode: err.code, errordetails: err.details });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -86,7 +86,7 @@ exports.postResource = (req, res) => {
   console.log("Body ", req.body);
 
   if (req.body.message.trim() === "") {
-    return res.status(400).json({ body: "Body must not be empty" });
+    return res.status(400).json({ message: "Body must not be empty" });
   }
 
   const newResource = {
@@ -112,7 +112,7 @@ exports.postResource = (req, res) => {
   }
 
   if (newResource.imageUrl && !Array.isArray(newResource.imageUrl)) {
-    return res.status(400).json({ body: "imageUrl must be an array" });
+    return res.status(400).json({ message: "imageUrl must be an array" });
   }
 
   console.log("Creating Resource Item ", newResource);
@@ -122,11 +122,11 @@ exports.postResource = (req, res) => {
     .then((doc) => {
       const resResourceItem = newResource;
       resResourceItem.resourceId = doc.id;
-      res.json(resResourceItem);
+      res.json({response: resResourceItem});
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ error: `Something went wrong ${err.message}` });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -140,11 +140,11 @@ exports.patchResource = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Resource not found" });
+        return res.status(404).json({ message: "Resource not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res.status(403).json({
-          error: "Unauthorized. Can not update other user's Resource",
+          message: "Unauthorized. Can not update other user's Resource",
         });
       } else {
         return doc;
@@ -157,7 +157,7 @@ exports.patchResource = (req, res) => {
       for (const [key, value] of Object.entries(req.body)) {
         if (key === "imageUrl") {
           if (!Array.isArray(value)) {
-            return res.status(400).json({ body: "imageUrl must be an array" });
+            return res.status(400).json({ message: "imageUrl must be an array" });
           }
           //Allow imageUrl to be inserted if not present
           //continue;
@@ -175,11 +175,11 @@ exports.patchResource = (req, res) => {
       return doc.ref.update(fields);
     })
     .then(() => {
-      res.json(`Resource ${req.params.resourceId} updated successfully`);
+      res.json({message: `Resource ${req.params.resourceId} updated successfully`});
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -191,12 +191,12 @@ exports.deleteResource = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Resource not found" });
+        return res.status(404).json({ message: "Resource not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res
           .status(403)
-          .json({ error: "Unauthorized. Can not delete other user's resource" });
+          .json({ message: "Unauthorized. Can not delete other user's resource" });
       } else {
         return document.delete();
       }
@@ -206,6 +206,6 @@ exports.deleteResource = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };

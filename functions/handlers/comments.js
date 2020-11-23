@@ -13,11 +13,11 @@ exports.patchComment = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Comment not found" });
+        return res.status(404).json({ message: "Comment not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res.status(403).json({
-          error: "Unauthorized. Can not update other user's comment",
+          message: "Unauthorized. Can not update other user's comment",
         });
       } else {
         return doc;
@@ -33,7 +33,7 @@ exports.patchComment = (req, res) => {
           // Return causing error
           return res
             .status(404)
-            .json({ error: `Comment property ${key} not found` });
+            .json({ message: `Comment property ${key} not found` });
         }
         if (value != null && value !== "") {
           fields[key] = value;
@@ -42,11 +42,11 @@ exports.patchComment = (req, res) => {
       return doc.ref.update(fields);
     })
     .then(() => {
-      res.json(`Comment ${req.params.commentId} updated successfully`);
+      res.json({response: `Comment ${req.params.commentId} updated successfully`});
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -59,19 +59,19 @@ exports.deleteComment = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Comment not found" });
+        return res.status(404).json({ message: "Comment not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res
           .status(403)
-          .json({ error: "Unauthorized. Can not delete other user's comment" });
+          .json({ message: "Unauthorized. Can not delete other user's comment" });
       } else {
         return db
           .doc(`/barks/${doc.data().barkId}`)
           .get()
           .then((barkDoc) => {
             if (!barkDoc.exists) {
-              return res.status(404).json({ error: "Bark not found" });
+              return res.status(404).json({ message: "Bark not found" });
             }
             return barkDoc.ref.update({
               commentCount: barkDoc.data().commentCount - 1,
@@ -87,6 +87,6 @@ exports.deleteComment = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };

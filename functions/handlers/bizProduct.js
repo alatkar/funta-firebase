@@ -13,11 +13,11 @@ exports.getBizProduct = (req, res) => {
       }
       product = doc.data();
       product.productId = doc.id;
-      return res.json(product);
+      return res.json({response: product});
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ errorCode: err.code, errordetails: err.details });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -26,7 +26,7 @@ exports.postBizProduct = (req, res) => {
 
   //if (req.body.body.trim() === '') // Doesn't work
   if (req.body.productName.trim() === "") {
-    return res.status(400).json({ body: "Biz Product Name must not be empty" });
+    return res.status(400).json({ message: "Biz Product Name must not be empty" });
   }
 
   const bizProduct = {
@@ -44,7 +44,7 @@ exports.postBizProduct = (req, res) => {
   if (req.body.imageUrl) {
     if (!Array.isArray(req.body.imageUrl)) {
       // Should be an array
-      return res.status(400).json({ body: "imageUrl must be an array" });
+      return res.status(400).json({ message: "imageUrl must be an array" });
     }
     bizProduct.imageUrl = req.body.imageUrl;
   }
@@ -58,12 +58,12 @@ exports.postBizProduct = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Biz Profile not found" });
+        return res.status(404).json({ message: "Biz Profile not found" });
       }
       if (doc.data().bizType !== "PRODUCT") {
         return res
           .status(400)
-          .json({ body: "Profle type should be PRODUCT to add new Product" });
+          .json({ message: "Profle type should be PRODUCT to add new Product" });
       } else {
         profileDoc.document = doc;
         return doc;
@@ -107,7 +107,7 @@ exports.postBizProduct = (req, res) => {
         productName: bizProduct.productName,
       });
       profileDoc.document.ref.update({ products: existingProducts });
-      return res.json(bizProduct);
+      return res.json({response: bizProduct});
     })
     .catch((err) => {
       console.error(err);
@@ -124,13 +124,13 @@ exports.patchBizProduct = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Product not found" });
+        return res.status(404).json({ message: "Product not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res
           .status(403)
           .json({
-            error: "Unauthorized. Can not update other user's Product",
+            message: "Unauthorized. Can not update other user's Product",
           });
       } else {
         return doc;
@@ -148,17 +148,17 @@ exports.patchBizProduct = (req, res) => {
           // TODO: Return causing error
           return res
             .status(404)
-            .json({ error: `Product property ${key} not found` });
+            .json({ message: `Product property ${key} not found` });
         }
       }
       return doc.ref.update(req.body);
     })
     .then(() => {
-      res.json(`Product ${req.params.productId} updated successfully`);
+      res.json({message: `Product ${req.params.productId} updated successfully`});
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -172,12 +172,12 @@ exports.deleteBizProduct = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Product not found" });
+        return res.status(404).json({ message: "Product not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res
           .status(403)
-          .json({ error: "Unauthorized. Can not delete other user's product" });
+          .json({ message: "Unauthorized. Can not delete other user's product" });
       } else {
         bizProfileId = doc.data().bizProfileId;
         return document.delete();
@@ -204,7 +204,7 @@ exports.deleteBizProduct = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
 

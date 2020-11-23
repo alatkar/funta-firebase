@@ -8,7 +8,7 @@ exports.uploadImage = (req, res) => {
   if (!req.params.imageType) {
     return res
       .status(400)
-      .json({ error: "Please provide image type to be uploaded" });
+      .json({ message: "Please provide image type to be uploaded" });
   }
 
   if (
@@ -21,7 +21,7 @@ exports.uploadImage = (req, res) => {
   ) {
     return res
     .status(400)
-    .json({ error: `Unsupported image type ${req.params.imageType}` });
+    .json({ message: `Unsupported image type ${req.params.imageType}` });
   }
 
   console.log("Uploading image for:", req);
@@ -40,7 +40,7 @@ exports.uploadImage = (req, res) => {
   busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
     console.log(fieldname, file, filename, encoding, mimetype);
     if (mimetype !== "image/jpeg" && mimetype !== "image/png") {
-      return res.status(400).json({ error: "Wrong file type submitted" });
+      return res.status(400).json({ message: "Wrong file type submitted" });
     }
     // my.image.png => ['my', 'image', 'png']
     const imageExtension = filename.split(".")[filename.split(".").length - 1];
@@ -74,11 +74,11 @@ exports.uploadImage = (req, res) => {
         console.log(
           `Uploaded ${req.params.imageType} image for user: ${req.user} as ${imageUrl}`
         );
-        res.json(imageUrl);
+        res.json({response: imageUrl});
       })
       .catch((err) => {
         console.error(err);
-        return res.status(500).json({ error: "something went wrong" });
+        return res.status(500).json({ message: "something went wrong" });
       });
   });
   busboy.end(req.rawBody);

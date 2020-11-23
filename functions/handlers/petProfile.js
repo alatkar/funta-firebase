@@ -9,15 +9,15 @@ exports.getPetProfile = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "PetProfile not found" });
+        return res.status(404).json({ message: "PetProfile not found" });
       }
       petProfile = doc.data();
       petProfile.petProfileId = doc.id;
-      return res.json(petProfile);
+      return res.json({ response: petProfile });
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ errorCode: err.code, errordetails: err.details });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -26,7 +26,7 @@ exports.postPetProfile = (req, res) => {
 
   //if (req.body.body.trim() === '') // Doesn't work
   if (req.body.petProfileName.trim() === "") {
-    return res.status(400).json({ body: "Pet Profile Name must not be empty" });
+    return res.status(400).json({ message: "Pet Profile Name must not be empty" });
   }
 
   const newPetProfile = {
@@ -43,7 +43,7 @@ exports.postPetProfile = (req, res) => {
   if (req.body.imageUrl) {
     if (Array.isArray(req.body.imageUrl)) {
       // Should be string not array
-      return res.status(400).json({ body: "imageUrl must be a string" });
+      return res.status(400).json({ message: "imageUrl must be a string" });
     }
     newPetProfile.imageUrl = req.body.imageUrl;
   }
@@ -85,14 +85,12 @@ exports.postPetProfile = (req, res) => {
             petProfileName: resPetProfile.petProfileName,
           });
           doc.ref.update({ petProfiles: existingProfiles });
-          return res.json(resPetProfile);
+          return res.json({ response: resPetProfile });
         });
     })
     .catch((err) => {
       console.error(err);
-      res
-        .status(500)
-        .json({ error: `postPetProfile: Something went wrong ${err.message}` });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -114,7 +112,7 @@ exports.uploadProfileImage = (req, res) => {
   busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
     console.log(fieldname, file, filename, encoding, mimetype);
     if (mimetype !== "image/jpeg" && mimetype !== "image/png") {
-      return res.status(400).json({ error: "Wrong file type submitted" });
+      return res.status(400).json({ message: "Wrong file type submitted" });
     }
     // my.image.png => ['my', 'image', 'png']
     const imageExtension = filename.split(".")[filename.split(".").length - 1];
@@ -146,11 +144,11 @@ exports.uploadProfileImage = (req, res) => {
         //const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media&token=${generatedToken}`;
         const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
         console.log("Uploaded profile image: ", imageUrl);
-        res.json(imageUrl);
+        return res.json({ response: imageUrl });
       })
       .catch((err) => {
         console.error(err);
-        return res.status(500).json({ error: "something went wrong" });
+        res.status(500).json({ message: `${err}` });
       });
   });
   busboy.end(req.rawBody);
@@ -165,13 +163,13 @@ exports.deletePetProfile = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "PetProfile not found" });
+        return res.status(404).json({ message: "PetProfile not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res
           .status(403)
           .json({
-            error: "Unauthorized. Can not delete other user's PetProfile",
+            message: "Unauthorized. Can not delete other user's PetProfile",
           });
       } else {
         // TODO: ALso delete likes.
@@ -199,7 +197,7 @@ exports.deletePetProfile = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -210,13 +208,13 @@ exports.patchPetProfile = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "PetProfile not found" });
+        return res.status(404).json({ message: "PetProfile not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res
           .status(403)
           .json({
-            error: "Unauthorized. Can not update other user's PetProfile",
+            message: "Unauthorized. Can not update other user's PetProfile",
           });
       } else {
         return doc;
@@ -235,17 +233,17 @@ exports.patchPetProfile = (req, res) => {
           // TODO: Return causing error
           return res
             .status(404)
-            .json({ error: `PetProfile property ${key} not found` });
+            .json({ message: `PetProfile property ${key} not found` });
         }
         //console.log(`${key}: ${value}`);
       }
       return doc.ref.update(req.body);
     })
     .then(() => {
-      res.json(`Pet Profile ${req.params.petProfileId} updated successfully`);
+      res.json({message: `Pet Profile ${req.params.petProfileId} updated successfully`});
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
