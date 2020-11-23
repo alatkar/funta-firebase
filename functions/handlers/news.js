@@ -47,11 +47,11 @@ exports.getAllNews = (req, res) => {
           newsItem.userImageUrl = map[newsItem.userName];
         }
       });
-      return res.json(news);
+      return res.json({ response: news });
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -63,7 +63,7 @@ exports.getNews = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "News Item not found" });
+        return res.status(404).json({ message: `News Item with id ${req.params.newsId} not found` });
       }
       newsItem = doc.data();
       newsItem.newsId = doc.id;
@@ -73,11 +73,11 @@ exports.getNews = (req, res) => {
       if (data) {
         newsItem.userImageUrl = data.data().imageUrl;
       }
-      return res.json(newsItem);
+      return res.json({ response: newsItem });
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ errorCode: err.code, errordetails: err.details });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -86,7 +86,7 @@ exports.postNews = (req, res) => {
   console.log("Body ", req.body);
 
   if (req.body.message.trim() === "") {
-    return res.status(400).json({ body: "Body must not be empty" });
+    return res.status(400).json({ message: "Body must not be empty" });
   }
 
   const newNews = {
@@ -112,7 +112,7 @@ exports.postNews = (req, res) => {
   }
 
   if (newNews.imageUrl && !Array.isArray(newNews.imageUrl)) {
-    return res.status(400).json({ body: "imageUrl must be an array" });
+    return res.status(400).json({ message: "imageUrl must be an array" });
   }
 
   console.log("Creating News Item ", newNews);
@@ -122,11 +122,11 @@ exports.postNews = (req, res) => {
     .then((doc) => {
       const resNewsItem = newNews;
       resNewsItem.newsId = doc.id;
-      res.json(resNewsItem);
+      res.json({response: resNewsItem, message: "News created successfully"});
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ error: `Something went wrong ${err.message}` });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -140,11 +140,11 @@ exports.patchNews = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "News not found" });
+        return res.status(404).json({ message: "News not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res.status(403).json({
-          error: "Unauthorized. Can not update other user's News",
+          message: "Unauthorized. Can not update other user's News",
         });
       } else {
         return doc;
@@ -157,7 +157,7 @@ exports.patchNews = (req, res) => {
       for (const [key, value] of Object.entries(req.body)) {
         if (key === "imageUrl") {
           if (!Array.isArray(value)) {
-            return res.status(400).json({ body: "imageUrl must be an array" });
+            return res.status(400).json({ message: "imageUrl must be an array" });
           }
           //Allow imageUrl to be inserted if not present
           //continue;
@@ -175,11 +175,11 @@ exports.patchNews = (req, res) => {
       return doc.ref.update(fields);
     })
     .then(() => {
-      res.json(`News ${req.params.newsId} updated successfully`);
+      res.json({ message: `News ${req.params.newsId} updated successfully`});
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -191,12 +191,12 @@ exports.deleteNews = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "News not found" });
+        return res.status(404).json({ message: "News not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res
           .status(403)
-          .json({ error: "Unauthorized. Can not delete other user's news" });
+          .json({ message: "Unauthorized. Can not delete other user's news" });
       } else {
         return document.delete();
       }
@@ -206,6 +206,6 @@ exports.deleteNews = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
