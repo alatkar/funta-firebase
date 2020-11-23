@@ -4,12 +4,30 @@ const enumDefinations = require("../util/enums");
 const { getUserImageUrl } = require("./users");
 
 exports.getAllBarks = (req, res) => {
+  let lastVisible = "";
+
+  let query = db.collection("barks").orderBy("createdAt", "desc");
+
+  if (req.query.filter) {
+    let arr = req.query.filter.split(",");
+    query = query.where("barkCategory", "in", arr);
+  }
+  if (req.query.lastVisible) {
+    lastVisible = req.query.lastVisible;
+    query = query.startAfter(req.query.lastVisible);
+  }
+
+  //query = query.where('category', 'in', ['RECOMMENDATION']);
+
+  query = query.limit(15);
+
   let barks = [];
-  db.collection("barks")
-    .orderBy("createdAt", "desc")
-    .limit(15)
+  query
     .get()
     .then((data) => {
+      if (data.docs.length == 0) return res.json({ response: { barks } });
+
+      lastVisible = data.docs[data.docs.length - 1].data().createdAt;
       data.forEach((element) => {
         // TODO: Use spread syntax if it is allowed
         let barkCat = "GENERAL";
@@ -61,11 +79,11 @@ exports.getAllBarks = (req, res) => {
           bark.userImageUrl = map[bark.userName];
         }
       });
-      return res.json(barks);
+      return res.json({ response: { barks, lastVisible: lastVisible} });
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -119,11 +137,11 @@ exports.uploadBarkImage = (req, res) => {
         //const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media&token=${generatedToken}`;
         const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
         console.log("Uploaded bark image: ", imageUrl);
-        res.json(imageUrl);
+        res.json({ response: imageUrl });
       })
       .catch((err) => {
         console.error(err);
-        return res.status(500).json({ error: "something went wrong" });
+        res.status(500).json({ message: `${err}` });
       });
   });
   busboy.end(req.rawBody);
@@ -134,7 +152,7 @@ exports.postBark = (req, res) => {
 
   //if (req.body.body.trim() === '') // Doesn't work
   if (req.body.message.trim() === "") {
-    return res.status(400).json({ body: "Body must not be empty" });
+    return res.status(400).json({ message: "Body must not be empty" });
   }
 
   const newBark = {
@@ -186,7 +204,7 @@ exports.postBark = (req, res) => {
     newBark.hashTag = req.body.hashTag;
   }
   if (newBark.imageUrl && !Array.isArray(newBark.imageUrl)) {
-    return res.status(400).json({ body: "imageUrl must be an array" });
+    return res.status(400).json({ message: "imageUrl must be an array" });
   }
   if (req.body.place) {
     // Can be Event Place
@@ -210,11 +228,11 @@ exports.postBark = (req, res) => {
     .then((doc) => {
       const resBark = newBark;
       resBark.barkId = doc.id;
-      res.json(resBark);
+      res.json({ response: resBark });
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ error: `Something went wrong ${err.message}` });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -225,7 +243,7 @@ exports.getBark = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Bark not found" });
+        return res.status(404).json({ message: "Bark not found" });
       }
       barkData = doc.data();
       barkData.barkId = doc.id;
@@ -254,11 +272,11 @@ exports.getBark = (req, res) => {
       if (data) {
         barkData.userImageUrl = data.data().imageUrl;
       }
-      return res.json(barkData);
+      return res.json({ response: barkData });
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ errorCode: err.code, errordetails: err.details });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -281,7 +299,7 @@ exports.commentOnBark = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Bark not found" });
+        return res.status(404).json({ message: "Bark not found" });
       }
       return doc.ref.update({ commentCount: doc.data().commentCount + 1 });
     })
@@ -290,11 +308,11 @@ exports.commentOnBark = (req, res) => {
     })
     .then((data) => {
       newComment.commentId = data.id;
-      res.json(newComment);
+      res.json({ response: newComment });
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ errorCode: err.code, errordetails: err.details });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -318,7 +336,7 @@ exports.likeBark = (req, res) => {
         barkData.barkId = doc.id;
         return likeDocument.get();
       } else {
-        return res.status(404).json({ error: "Bark not found" });
+        return res.status(404).json({ message: "Bark not found" });
       }
     })
     .then((data) => {
@@ -335,15 +353,15 @@ exports.likeBark = (req, res) => {
             return barkDocument.update({ likeCount: barkData.likeCount });
           })
           .then(() => {
-            return res.json(barkData);
+            return res.json({ response: barkData });
           });
       } else {
-        return res.status(400).json({ error: "Bark already liked" });
+        return res.status(400).json({ message: "Bark already liked" });
       }
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -367,12 +385,12 @@ exports.unlikeBark = (req, res) => {
         barkData.barkId = doc.id;
         return likeDocument.get();
       } else {
-        return res.status(404).json({ error: "Bark not found" });
+        return res.status(404).json({ message: "Bark not found" });
       }
     })
     .then((data) => {
       if (data.empty) {
-        return res.status(400).json({ error: "Bark not liked" });
+        return res.status(400).json({ message: "Bark not liked" });
       } else {
         console.log("Liked Doc: ", data.docs[0], data.docs[0].id);
         return db
@@ -384,13 +402,13 @@ exports.unlikeBark = (req, res) => {
             return barkDocument.update({ likeCount: barkData.likeCount });
           })
           .then(() => {
-            return res.json(barkData);
+            return res.json({ response: barkData });
           });
       }
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -404,11 +422,11 @@ exports.patchBark = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Bark not found" });
+        return res.status(404).json({ message: "Bark not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res.status(403).json({
-          error: "Unauthorized. Can not update other user's Bark",
+          message: "Unauthorized. Can not update other user's Bark",
         });
       } else {
         return doc;
@@ -422,7 +440,9 @@ exports.patchBark = (req, res) => {
       for (const [key, value] of Object.entries(req.body)) {
         if (key === "imageUrl") {
           if (!Array.isArray(value)) {
-            return res.status(400).json({ body: "imageUrl must be an array" });
+            return res
+              .status(400)
+              .json({ message: "imageUrl must be an array" });
           }
           //Allow imageUrl to be inserted if not present
           //continue;
@@ -440,11 +460,11 @@ exports.patchBark = (req, res) => {
       return doc.ref.update(fields);
     })
     .then(() => {
-      res.json(`Bark ${req.params.barkId} updated successfully`);
+      res.json({ message: `Bark ${req.params.barkId} updated successfully` });
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
 
@@ -456,12 +476,12 @@ exports.deleteBark = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Bark not found" });
+        return res.status(404).json({ message: "Bark not found" });
       }
       if (doc.data().userName !== req.user.userName) {
         return res
           .status(403)
-          .json({ error: "Unauthorized. Can not delete other user's bark" });
+          .json({ message: "Unauthorized. Can not delete other user's bark" });
       } else {
         // TODO: ALso delete likes.
         // TODO: Also delete comments
@@ -473,6 +493,6 @@ exports.deleteBark = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      res.status(500).json({ message: `${err}` });
     });
 };
