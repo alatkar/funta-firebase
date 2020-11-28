@@ -110,7 +110,7 @@ exports.loginUser = (req, res) => {
 
   // Data validation
   const { valid, errors } = validateLoginData(user);
-  if (!valid) return res.status(400).json({ message: errors });
+  if (!valid) return res.status(400).json({ errors });
 
   firebase
     .auth()
@@ -128,7 +128,7 @@ exports.loginUser = (req, res) => {
       //if (err.code === "auth/wrong-password")
       return res.status(403).json({
         error: `${err}`,
-        message: "Wrong credentials, please try again",
+        general: `Wrong credentials, please try again. Code: ${err}`,
       });
       //else return res.status(500).json({ error: err.code });
     });
@@ -146,7 +146,7 @@ exports.signupUser = (req, res) => {
 
   // Data validation
   const { valid, errors } = validateSignupData(newUser);
-  if (!valid) return res.status(400).json({ message: errors });
+  if (!valid) return res.status(400).json({ errors });
 
   let noImage = "no-img.png";
 
@@ -181,7 +181,7 @@ exports.signupUser = (req, res) => {
       if (doc.exists) {
         return res
           .status(400)
-          .json({ message: `The user ${newUser.userName} already exists` });
+          .json({ errors: { userName: `The user ${newUser.userName} already exists` }});
       } else {
         return firebase
           .auth()
@@ -213,11 +213,11 @@ exports.signupUser = (req, res) => {
       if (err.code === "auth/email-already-in-use") {
         return res
           .status(400)
-          .json({ message: `Email ${newUser.email} is already in use` });
+          .json({ errors: {email: `Email ${newUser.email} is already in use` }});
       } else {
         return res.status(500).json({
           error: err.code,
-          message: "Something went wrong, please try again",
+          general: `Something went wrong, please try again. Code: ${err.code}`,
         });
       }
     });
