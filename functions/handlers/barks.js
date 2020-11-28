@@ -25,7 +25,7 @@ exports.getAllBarks = (req, res) => {
   query
     .get()
     .then((data) => {
-      if (data.docs.length == 0) return res.json({ response: { barks } });
+      if (data.docs.length == 0) return barks;
 
       lastVisible = data.docs[data.docs.length - 1].data().createdAt;
       data.forEach((element) => {
@@ -79,7 +79,9 @@ exports.getAllBarks = (req, res) => {
           bark.userImageUrl = map[bark.userName];
         }
       });
-      return res.json({ response: { barks, lastVisible: lastVisible} });
+      if (barks.length == 0) return res.json({ response: { barks } });
+
+      return res.json({ response: { barks, lastVisible: lastVisible } });
     })
     .catch((err) => {
       console.error(err);
