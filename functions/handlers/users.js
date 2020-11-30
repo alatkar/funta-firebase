@@ -378,6 +378,8 @@ exports.getAuthenticatedUser = (req, res) => {
           type: doc.data().type,
           read: doc.data().read,
           notificationId: doc.id,
+          groupId: doc.data().groupId ? doc.data().groupId : null,
+          state: doc.data().state ? doc.data().state : null,
         });
       });
       return;
