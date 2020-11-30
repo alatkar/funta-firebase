@@ -17,7 +17,8 @@ exports.uploadImage = (req, res) => {
     req.params.imageType !== "profile" &&
     req.params.imageType !== "product" &&
     req.params.imageType !== "news" &&
-    req.params.imageType !== "resource"
+    req.params.imageType !== "resource" &&
+    req.params.imageType !== "group"
   ) {
     return res
     .status(400)
