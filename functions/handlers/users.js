@@ -203,7 +203,7 @@ exports.signupUser = (req, res) => {
         userType: newUser.userType,
         isNonProfitOrganization: newUser.isNonProfitOrganization,
       };
-      db.doc(`/users/${newUser.userName}`).set(userCred);
+      return db.doc(`/users/${newUser.userName}`).set(userCred);
     })
     .then(() => {
       return res.status(201).json({ token });
@@ -378,6 +378,7 @@ exports.getAuthenticatedUser = (req, res) => {
           type: doc.data().type,
           read: doc.data().read,
           notificationId: doc.id,
+          message: doc.data().message,
           groupId: doc.data().groupId ? doc.data().groupId : null,
           state: doc.data().state ? doc.data().state : null,
         });
