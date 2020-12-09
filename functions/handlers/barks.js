@@ -53,6 +53,7 @@ exports.getAllBarks = (req, res) => {
           userId: element.data().userId,
           //userImageUrl: element.data().imageUrl,    // This is populated at the bottom
           userName: element.data().userName,
+          groupId: element.data().groupId,
         });
       });
       return barks;
@@ -163,6 +164,7 @@ exports.postBark = (req, res) => {
     createdAt: new Date().toISOString(),
     likeCount: 0,
     message: req.body.message,
+    groupId: req.body.groupId,
     userId: req.user.userId,
     userName: req.user.userName,
   };
