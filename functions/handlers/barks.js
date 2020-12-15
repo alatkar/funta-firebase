@@ -54,6 +54,7 @@ exports.getAllBarks = (req, res) => {
           //userImageUrl: element.data().imageUrl,    // This is populated at the bottom
           userName: element.data().userName,
           groupId: element.data().groupId,
+          groupName: element.data().groupId, //TODO: add group name
         });
       });
       return barks;
