@@ -40,8 +40,7 @@ exports.postLeaveGroup = (req, res) => {
               groupId: req.params.groupId,
               type: "GROUPLEAVE",
               message: `Member ${req.user.userName} has left group ${req.params.groupId} with comment: ${req.body.message}`,
-              read: false,
-              state: "open",
+              read: false
             });
           })
         );
