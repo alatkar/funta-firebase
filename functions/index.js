@@ -1,8 +1,9 @@
 const functions = require("firebase-functions");
 const app = require("express")();
 const fireBaseAuth = require("./util/fireBaseAuth");
+const firebase = require("firebase");
 
-const cors = require('cors');
+const cors = require("cors");
 app.use(cors());
 
 const { db } = require("./util/admin");
@@ -19,10 +20,7 @@ const {
   likeBark,
   unlikeBark,
 } = require("./handlers/barks");
-const {
-  patchComment,
-  deleteComment
-} = require("./handlers/comments");
+const { patchComment, deleteComment } = require("./handlers/comments");
 const {
   loginUser,
   signupUser,
@@ -33,65 +31,94 @@ const {
   markNotificationsRead,
   sendPassWordResetEmail,
   patchUser,
-  getUserByEmail
+  getUserByEmail,
 } = require("./handlers/users");
 const {
   getPetProfile,
   patchPetProfile,
   postPetProfile,
   uploadProfileImage,
-  deletePetProfile
+  deletePetProfile,
 } = require("./handlers/petProfile");
 const {
   getBizProfile,
   patchBizProfile,
   postBizProfile,
-  deleteBizProfile
+  deleteBizProfile,
 } = require("./handlers/bizProfile");
 const {
   getBizProduct,
   patchBizProduct,
   postBizProduct,
   uploadProductImage,
-  deleteBizProduct
+  deleteBizProduct,
 } = require("./handlers/bizProduct");
 const {
   getAllNews,
   getNews,
   postNews,
   patchNews,
-  deleteNews
+  deleteNews,
 } = require("./handlers/news");
 const {
   getAllResources,
   getResource,
   postResource,
   patchResource,
-  deleteResource
+  deleteResource,
 } = require("./handlers/resources");
 
-const {
-  uploadImage
-} = require("./handlers/images");
-
+const { uploadImage } = require("./handlers/images");
 
 const {
   getPersonalPetProfile,
   getPersonalProducts,
-  getPersonalServices
+  getPersonalServices,
 } = require("./handlers/personalization");
 
 const {
   postContactus,
   getContactus,
-  getAllContactus
+  getAllContactus,
 } = require("./handlers/contactus");
 
+const { postHelp, getHelp, getAllHelp } = require("./handlers/help");
+
 const {
-  postHelp,
-  getHelp,
-  getAllHelp
-} = require("./handlers/help")
+  getAllGroups,
+  getGroup,
+  patchGroup,
+  postGroup,
+  deleteGroup,
+} = require("./handlers/groups");
+
+const {
+  postRequestJoinGroup,
+  postAcceptRequestToJoinGroup,
+  postDenyRequestToJoinGroup,
+} = require("./handlers/groupJoin");
+
+const {
+  postInviteToJoinGroup,
+  postAcceptInviteJoinGroup,
+  postDenyInviteJoinGroup,
+} = require("./handlers/groupInvite");
+
+const {
+  postLeaveGroup
+} = require("./handlers/groupLeave");
+
+const { postInviteFunta } = require("./handlers/invite");
+
+const { getUserNotifications } = require("./handlers/notifications");
+
+const { postSearchByUserName } = require("./handlers/search");
+
+const {
+  getAllCategories,
+  getCategory,
+  postCategory,
+} = require("./handlers/categories");
 
 ///// APIS /////
 
@@ -123,6 +150,7 @@ app.get("/user/:userName", getUserDetails);
 app.post("/user/resetpassword/:email", sendPassWordResetEmail);
 
 app.post("/notifications", fireBaseAuth, markNotificationsRead);
+app.get("/notifications", fireBaseAuth, getUserNotifications);
 
 // Pet Profile Route
 app.get("/petprofile/:petProfileId", /*fireBaseAuth,*/ getPetProfile);
@@ -144,7 +172,7 @@ app.delete("/bizprofile/:bizProfileId", fireBaseAuth, deleteBizProfile);
 app.post("/product/image", fireBaseAuth, uploadProductImage);
 app.get("/product/:productId", getBizProduct);
 app.patch("/product/:productId", fireBaseAuth, patchBizProduct);
-app.post("/product/:bizProfileId", fireBaseAuth, postBizProduct);  //Needs to know the profile this product belongs
+app.post("/product/:bizProfileId", fireBaseAuth, postBizProduct); //Needs to know the profile this product belongs
 app.delete("/product/:productId", fireBaseAuth, deleteBizProduct);
 
 // Get News routes
@@ -178,6 +206,35 @@ app.post("/contactus", fireBaseAuth, postContactus);
 app.get("/help/:helpId", fireBaseAuth, getHelp);
 app.get("/help", fireBaseAuth, getAllHelp);
 app.post("/help", fireBaseAuth, postHelp);
+
+// Groups
+app.get("/groups", getAllGroups); // type, description
+//app.get("/group", fireBaseAuth, getAllGroups); // type, description
+app.get("/groups/:groupId", getGroup);
+app.patch("/groups/:groupId", fireBaseAuth, patchGroup);
+app.delete("/groups/:groupId", fireBaseAuth, deleteGroup);
+app.post("/groups", fireBaseAuth, postGroup);
+
+app.post("/groups/:groupId/invite", fireBaseAuth, postInviteToJoinGroup);
+app.post("/groups/:groupId/accept", fireBaseAuth, postAcceptInviteJoinGroup);
+app.post("/groups/:groupId/deny", fireBaseAuth, postDenyInviteJoinGroup);
+
+app.post("/groups/:groupId/join", fireBaseAuth, postRequestJoinGroup);
+app.post(
+  "/groups/:groupId/accept/:userName",
+  fireBaseAuth,
+  postAcceptRequestToJoinGroup
+);
+app.post(
+  "/groups/:groupId/deny/:userName",
+  fireBaseAuth,
+  postDenyRequestToJoinGroup
+);
+app.post("/groups/:groupId/leave", fireBaseAuth, postLeaveGroup);
+
+app.post("/invite", fireBaseAuth, postInviteFunta);
+
+app.post("/search/user/:userName", fireBaseAuth, postSearchByUserName);
 
 // Export Route starting with api as /api/barks
 exports.api = functions.https.onRequest(app);
@@ -271,9 +328,8 @@ exports.onUserImageChange = functions.firestore
   });
 */
 
-exports.onBarkDelete = functions
-  //.region("europe-west1")
-  .firestore.document("/barks/{barkId}")
+exports.onBarkDelete = functions.firestore //.region("europe-west1")
+  .document("/barks/{barkId}")
   .onDelete((snapshot, context) => {
     const barkId = context.params.barkId;
     const batch = db.batch();
@@ -301,6 +357,107 @@ exports.onBarkDelete = functions
           batch.delete(db.doc(`/notifications/${doc.id}`));
         });
         return batch.commit();
+      })
+      .catch((err) => console.error(err));
+  });
+
+// TODO: Bark created for group. Create notification for all members
+exports.onBarkCreate = functions.firestore //.region("europe-west1")
+  .document("/barks/{barkId}")
+  .onCreate((snapshot, context) => {
+    const barkId = context.params.barkId;
+    const batch = db.batch();
+    return;
+    /*return db
+      .collection("comments")
+      .where("barkId", "==", barkId)
+      .get()
+      .then((data) => {
+        data.forEach((doc) => {
+          batch.delete(db.doc(`/comments/${doc.id}`));
+        });
+        return db.collection("likes").where("barkId", "==", barkId).get();
+      })
+      .then((data) => {
+        data.forEach((doc) => {
+          batch.delete(db.doc(`/likes/${doc.id}`));
+        });
+        return db
+          .collection("notifications")
+          .where("barkId", "==", barkId)
+          .get();
+      })
+      .then((data) => {
+        data.forEach((doc) => {
+          batch.delete(db.doc(`/notifications/${doc.id}`));
+        });
+        return batch.commit();
+      })
+      .catch((err) => console.error(err));
+      */
+  });
+
+exports.createNotificationOnInvite = functions.firestore
+  .document("invitations/{id}")
+  .onCreate((snapshot) => {
+    var actionCodeSettings = {
+      // URL you want to redirect back to. The domain (www.example.com) for this
+      // URL must be in the authorized domains list in the Firebase Console.
+      url: "https://funta-33071.web.app/signup",
+      // This must be true.
+      handleCodeInApp: true,
+      /*,
+      iOS: {
+        bundleId: 'com.example.ios'
+      },
+      android: {
+        packageName: 'com.example.android',
+        installApp: true,
+        minimumVersion: '12'
+      },
+      dynamicLinkDomain: 'funta-33071.web.app'*/
+    };
+
+    return db
+      .doc(`/users/${snapshot.data().recipient}`)
+      .get()
+      .then((doc) => {
+        if (doc.exists) {
+          return doc.id;
+        } else {
+          //Send Signup email if user not found
+          console.log(
+            `Sending email to ${snapshot.data().email} to join the site`
+          );
+          return firebase
+            .auth()
+            .sendSignInLinkToEmail(snapshot.data().email, actionCodeSettings);
+        }
+      })
+      .then(() => {
+        let recipient = snapshot.data().email;
+        if (snapshot.data().recipient) recipient = snapshot.data().recipient;
+
+        return db
+          .collection("notifications")
+          .add({
+            createdAt: new Date().toISOString(),
+            email: snapshot.data().email,
+            recipient: recipient,
+            sender: snapshot.data().sender,
+            groupId: snapshot.data().groupId,
+            type: "GROUPINVITE",
+            message: snapshot.data().message,
+            read: false,
+            state: "open",
+          })
+          .then((doc) => {
+            console.log(
+              `Notification created ${doc.id} of type GROUPINVITE from ${
+                snapshot.data().sender
+              } to ${snapshot.data().email}`
+            );
+          });
       })
       .catch((err) => console.error(err));
   });
