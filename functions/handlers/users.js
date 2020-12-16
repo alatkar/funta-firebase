@@ -128,7 +128,8 @@ exports.loginUser = (req, res) => {
       //if (err.code === "auth/wrong-password")
       return res.status(403).json({
         error: `${err}`,
-        general: `Wrong credentials, please try again. Code: ${err}`,
+        general: `Wrong credentials, please try again.`,
+        //general: `Wrong credentials, please try again. Code: ${err}`,
       });
       //else return res.status(500).json({ error: err.code });
     });
@@ -251,6 +252,8 @@ exports.getUserDetails = (req, res) => {
         bark.barkId = doc.id;
         bark.barkCategory = barkCat;
         bark.userImageUrl = userData.user.imageUrl;
+        bark.groupId = bark.groupId;
+        bark.groupName = bark.groupId; // TODO: Need group name
         userData.barks.push(
           bark
           /*{
