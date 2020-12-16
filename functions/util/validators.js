@@ -22,6 +22,15 @@ exports.validateSignupData = (data) => {
   if (data.password !== data.confirmPassword)
     errors.password = `Passwords must match: ${data.password} ${data.confirmPassword}`;
   if (isEmpty(data.userName)) errors.userName = "Must not be empty";
+  else {
+    if (data.userName.indexOf(" ") != -1)
+      errors.userName = "No spaces allowed in username";
+    if (data.userName.toLowerCase() != data.userName)
+      errors.userName = errors.userName ? errors.userName + ". Only lower case characters are allowed" : "Only lower case characters are allowed";
+    var regex = /[ !@#$%^&*()+\=\[\]{};':"\\|,<>\/?]/g;
+    if(regex.test(data.userName)) 
+       errors.userName = errors.userName ? errors.userName + ". Special charactes are not allowed" : "Special charactes are not allowed";
+  }
 
   return {
     errors,
