@@ -165,10 +165,14 @@ exports.postBark = (req, res) => {
     createdAt: new Date().toISOString(),
     likeCount: 0,
     message: req.body.message,
-    groupId: req.body.groupId,
     userId: req.user.userId,
     userName: req.user.userName,
   };
+
+  // Group Id if present
+  if (req.body.groupId) {
+    newBark.groupId = req.body.groupId;
+  }
 
   // imageUrl is optional
   if (req.body.imageUrl) {
