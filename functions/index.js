@@ -108,6 +108,10 @@ const {
   postLeaveGroup
 } = require("./handlers/groupLeave");
 
+const {
+  postRemoveMemberFromGroup
+} = require("./handlers/groupRemove");
+
 const { postInviteFunta } = require("./handlers/invite");
 
 const { getUserNotifications } = require("./handlers/notifications");
@@ -218,6 +222,7 @@ app.post("/groups", fireBaseAuth, postGroup);
 app.post("/groups/:groupId/invite", fireBaseAuth, postInviteToJoinGroup);
 app.post("/groups/:groupId/accept", fireBaseAuth, postAcceptInviteJoinGroup);
 app.post("/groups/:groupId/deny", fireBaseAuth, postDenyInviteJoinGroup);
+app.post("/groups/:groupId/remove", fireBaseAuth, postRemoveMemberFromGroup);
 
 app.post("/groups/:groupId/join", fireBaseAuth, postRequestJoinGroup);
 app.post(
