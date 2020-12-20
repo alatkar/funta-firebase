@@ -20,6 +20,9 @@ const {
   likeBark,
   unlikeBark,
 } = require("./handlers/barks");
+
+const {postEventInterest} = require("./handlers/eventInterest");
+
 const { patchComment, deleteComment } = require("./handlers/comments");
 const {
   loginUser,
@@ -141,6 +144,9 @@ app.get("/barks/:barkId/unlike", fireBaseAuth, unlikeBark); //Actually updates
 // Comments
 app.patch("/comments/:commentId", fireBaseAuth, patchComment);
 app.delete("/comments/:commentId", fireBaseAuth, deleteComment);
+
+// Events
+app.post("/events/:eventId/interest", fireBaseAuth, postEventInterest);
 
 // Users route
 app.get("/user", fireBaseAuth, getAuthenticatedUser);
