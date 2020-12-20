@@ -55,6 +55,9 @@ exports.getAllBarks = (req, res) => {
           userName: element.data().userName,
           groupId: element.data().groupId,
           groupName: element.data().groupId, //TODO: add group name
+          // EVENT
+          interested: element.data().interested,
+          mayBe: element.data().mayBe
         });
       });
       return barks;
@@ -73,7 +76,12 @@ exports.getAllBarks = (req, res) => {
       // Create Map of userName to userImages
       let map = [];
       data.forEach((elem) => {
-        map[elem.data().userName] = elem.data().imageUrl;
+        // Send smallest possible image for the userImage
+        let imageUrl = elem.data().imageUrl;
+        if (elem.data().thumbnail) imageUrl = elem.data().thumbnail;
+        else if (elem.data().imageUrlSmall) imageUrl = elem.data().imageUrlSmall;
+        
+        map[elem.data().userName] = imageUrl;
         console.log("Got image uri: ", elem.data().imageUrl);
       });
       barks.forEach((bark) => {

@@ -242,6 +242,11 @@ exports.getUserDetails = (req, res) => {
       }
     })
     .then((data) => {
+      // Send smallest possible image for the userImage
+      let imageUrl = userData.user.imageUrl;
+      if (userData.user.thumbnail) imageUrl = userData.user.thumbnail;
+      else if (userData.user.imageUrlSmall) imageUrl = userData.user.imageUrlSmall;
+       
       userData.barks = [];
       data.forEach((doc) => {
         let barkCat = "GENERAL";
@@ -251,7 +256,7 @@ exports.getUserDetails = (req, res) => {
         let bark = doc.data();
         bark.barkId = doc.id;
         bark.barkCategory = barkCat;
-        bark.userImageUrl = userData.user.imageUrl;
+        bark.userImageUrl = imageUrl;
         bark.groupId = bark.groupId;
         bark.groupName = bark.groupId; // TODO: Need group name
         userData.barks.push(
@@ -507,6 +512,7 @@ exports.uploadUserImage = (req, res) => {
 
   let imageToBeUploaded = {};
   let imageFileName;
+  let imageExtension
   // TODO: String for image token
   //let generatedToken = uuid();
 
@@ -516,16 +522,26 @@ exports.uploadUserImage = (req, res) => {
       return res.status(400).json({ message: "Wrong file type submitted" });
     }
     // my.image.png => ['my', 'image', 'png']
-    const imageExtension = filename.split(".")[filename.split(".").length - 1];
+    imageExtension = filename.split(".")[filename.split(".").length - 1].toLowerCase();;
     // 32756238461724837.png
     imageFileName = `${req.user.userName}-${Math.round(
       Math.random() * 1000000000000
     ).toString()}.${imageExtension}`;
+
+    // TODO: Following doesn't work as file can't be overwritten
+    imageFileName = `${req.user.userName}.${imageExtension}`;
+
+    // Save file as timestamp
+    imageFileName = `${Math.round(
+      new Date().getTime()
+    ).toString()}.${imageExtension}`;
+
     const filepath = path.join(os.tmpdir(), imageFileName);
     imageToBeUploaded = { filepath, mimetype };
     file.pipe(fs.createWriteStream(filepath));
   });
   busboy.on("finish", () => {
+    let destination = `${req.user.userName}/user/${imageFileName}`;
     admin
       .storage()
       .bucket(config.storageBucket)
@@ -538,13 +554,21 @@ exports.uploadUserImage = (req, res) => {
             //firebaseStorageDownloadTokens: generatedToken,
           },
         },
+        destination: destination
       })
-      .then(() => {
+      .then((obj) => {
+        let file = encodeURIComponent(obj[0].name);
+
         console.log("Uploading image for user:", req.user);
         // Append token to url
         //const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media&token=${generatedToken}`;
-        const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
-        return db.doc(`/users/${req.user.userName}`).update({ imageUrl });
+        const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${file}?alt=media`;
+
+        let strChange = file.replace(`.${imageExtension}`, `_600x600.${imageExtension}`)
+        const imageUrlSmall = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${strChange}?alt=media`;
+        strChange = file.replace(`.${imageExtension}`, `_200x200.${imageExtension}`)
+        const thumbnail = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${strChange}?alt=media`;
+        return db.doc(`/users/${req.user.userName}`).update({ imageUrl, imageUrlSmall, thumbnail});
       })
       .then(() => {
         return res.json({ message: "image uploaded successfully" });
