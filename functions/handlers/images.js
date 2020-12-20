@@ -4,6 +4,7 @@ const enumDefinations = require("../util/enums");
 const storage = require("firebase/storage");
 
 // Upload image for profile, bark, user, news, resource etc
+// Store images in user folder with sub folder as per image tupe
 exports.uploadImage = (req, res) => {
   if (!req.params.imageType) {
     return res
@@ -16,6 +17,7 @@ exports.uploadImage = (req, res) => {
     req.params.imageType !== "user" &&
     req.params.imageType !== "profile" &&
     req.params.imageType !== "product" &&
+    req.params.imageType !== "service" &&
     req.params.imageType !== "news" &&
     req.params.imageType !== "resource" &&
     req.params.imageType !== "group"
@@ -25,7 +27,7 @@ exports.uploadImage = (req, res) => {
     .json({ message: `Unsupported image type ${req.params.imageType}` });
   }
 
-  console.log("Uploading image for:", req);
+  //console.log("Uploading image for:", req);
   const BusBoy = require("busboy");
   const path = require("path");
   const os = require("os");
@@ -43,17 +45,23 @@ exports.uploadImage = (req, res) => {
     if (mimetype !== "image/jpeg" && mimetype !== "image/png") {
       return res.status(400).json({ message: "Wrong file type submitted" });
     }
-    // my.image.png => ['my', 'image', 'png']
-    const imageExtension = filename.split(".")[filename.split(".").length - 1];
-    // 32756238461724837.png
-    imageFileName = `${req.user.userName}-${req.params.imageType}-${Math.round(
-      Math.random() * 1000000000000
+    // File nameing algo: using date time ticks (Earlier random math)
+    const imageExtension = filename.split(".")[filename.split(".").length - 1].toLowerCase();
+    //imageFileName = `${req.user.userName}-${req.params.imageType}-${Math.round(
+    //  Math.random() * 1000000000000
+    //).toString()}.${imageExtension}`;
+    
+    imageFileName = `${Math.round(
+      new Date().getTime()
     ).toString()}.${imageExtension}`;
+
     const filepath = path.join(os.tmpdir(), imageFileName);
     imageToBeUploaded = { filepath, mimetype };
-    file.pipe(fs.createWriteStream(filepath));
+    file.pipe(fs.createWriteStream(filepath));    
   });
   busboy.on("finish", () => {
+  
+    let destination = `${req.user.userName}/${req.params.imageType}/${imageFileName}`;
     admin
       .storage()
       .bucket(config.storageBucket)
@@ -62,16 +70,21 @@ exports.uploadImage = (req, res) => {
         metadata: {
           metadata: {
             contentType: imageToBeUploaded.mimetype,
-            //Generate token to be appended to imageUrl
+            //Generate token to be appended to imageUrl. Check which format works
             //firebaseStorageDownloadTokens: generatedToken,
-          },
+            //metadata: {
+            //  firebaseStorageDownloadTokens: uuid
+            //}
+          },          
         },
-      })      
-      .then(() => {
+        destination: destination
+      })   
+      .then((imageObj) => {
+        let fileName = encodeURIComponent(imageObj[0].name);
         console.log(
           `Uploading ${req.params.imageType} image for user: ${req.user}`
         );
-        const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
+        const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${fileName}?alt=media`;
         console.log(
           `Uploaded ${req.params.imageType} image for user: ${req.user} as ${imageUrl}`
         );
