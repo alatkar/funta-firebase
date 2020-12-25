@@ -23,6 +23,8 @@ const {
 
 const {postEventInterest} = require("./handlers/eventInterest");
 
+const {postInviteToJoinEvent} = require("./handlers/eventInvite");
+
 const { patchComment, deleteComment } = require("./handlers/comments");
 const {
   loginUser,
@@ -147,6 +149,7 @@ app.delete("/comments/:commentId", fireBaseAuth, deleteComment);
 
 // Events
 app.post("/events/:eventId/interest", fireBaseAuth, postEventInterest);
+app.post("/events/:eventId/invite", fireBaseAuth, postInviteToJoinEvent);
 
 // Users route
 app.get("/user", fireBaseAuth, getAuthenticatedUser);
