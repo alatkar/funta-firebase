@@ -1,7 +1,7 @@
 const { admin, db } = require("../util/admin");
 const config = require("../util/config");
 const enumDefinations = require("../util/enums");
-const { getUserImageUrl } = require("./users");
+const { getUserObject } = require("./users");
 
 // Get News
 exports.getAllNews = (req, res) => {
@@ -31,7 +31,7 @@ exports.getAllNews = (req, res) => {
       console.log("Unique users in News :", unique);
       return Promise.all(
         unique.map((userId) => {
-          return getUserImageUrl(userId);
+          return getUserObject(userId);
         })
       );
     })
@@ -67,7 +67,7 @@ exports.getNews = (req, res) => {
       }
       newsItem = doc.data();
       newsItem.newsId = doc.id;
-      return getUserImageUrl(newsItem.userName);
+      return getUserObject(newsItem.userName);
     })
     .then((data) => {
       if (data) {
