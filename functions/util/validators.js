@@ -26,10 +26,14 @@ exports.validateSignupData = (data) => {
     if (data.userName.indexOf(" ") != -1)
       errors.userName = "No spaces allowed in username";
     if (data.userName.toLowerCase() != data.userName)
-      errors.userName = errors.userName ? errors.userName + ". Only lower case characters are allowed" : "Only lower case characters are allowed";
+      errors.userName = errors.userName
+        ? errors.userName + ". Only lower case characters are allowed"
+        : "Only lower case characters are allowed";
     var regex = /[ !@#$%^&*()+\=\[\]{};':"\\|,<>\/?]/g;
-    if(regex.test(data.userName)) 
-       errors.userName = errors.userName ? errors.userName + ". Special charactes are not allowed" : "Special charactes are not allowed";
+    if (regex.test(data.userName))
+      errors.userName = errors.userName
+        ? errors.userName + ". Special charactes are not allowed"
+        : "Special charactes are not allowed";
   }
 
   return {
@@ -50,17 +54,42 @@ exports.validateLoginData = (data) => {
   };
 };
 
-exports.reduceUserDetails = (data) => {
+exports.reduceUserDetails = (data, prevData) => {
   let userDetails = {};
 
-  if (!isEmpty(data.bio.trim())) userDetails.bio = data.bio;
-  if (!isEmpty(data.website.trim())) {
+  if (data.bio && !isEmpty(data.bio.trim())) userDetails.bio = data.bio;
+  if (data.website && !isEmpty(data.website.trim())) {
     // https://website.com
     if (data.website.trim().substring(0, 4) !== "http") {
       userDetails.website = `http://${data.website.trim()}`;
     } else userDetails.website = data.website;
   }
-  if (!isEmpty(data.location.trim())) userDetails.location = data.location;
+  if (data.location && !isEmpty(data.location.trim()))
+    userDetails.location = data.location;
+    
+  if (
+    data.imageUrl &&
+    !isEmpty(data.imageUrl.trim()) &&
+    (!prevData.imageUrl || prevData.imageUrl != data.imageUrl.trim())
+  ) {
+    userDetails.imageUrl = data.imageUrl;
+    // Update imageUrlSmall: and thumbnail:
+    let loc = data.imageUrl.lastIndexOf(".");
+    var extension = data.imageUrl.substring(loc + 1, loc + 5).toLowerCase();
+    if (extension != "jfif") {
+      var result = data.imageUrl.splice(loc, 0, "_200x200");
+      userDetails.thumbnail = result;
+      result = data.imageUrl.splice(loc, 0, "_600x600");
+      userDetails.imageUrlSmall = result;
+    } else {
+      userDetails.imageUrlSmall = "";
+      userDetails.thumbnail = "";
+    }
+  }
 
   return userDetails;
+};
+
+String.prototype.splice = function (idx, rem, str) {
+  return this.slice(0, idx) + str + this.slice(idx + Math.abs(rem));
 };
