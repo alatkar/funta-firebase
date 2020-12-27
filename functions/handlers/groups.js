@@ -259,3 +259,15 @@ exports.deleteGroup = (req, res) => {
       res.status(500).json({ message: `${err}` });
     });
 };
+
+exports.getGroupObject = async (groupId) => {
+  //console.log("getUserObject: getting data for :", groupId);
+  return (
+    db
+      .doc(`/groups/${groupId}`)
+      .get()
+      .catch((err) => {
+        console.error("getUserImage Error ", err);
+      })
+  );
+};
