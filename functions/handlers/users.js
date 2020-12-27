@@ -2,6 +2,7 @@ const { admin, db } = require("../util/admin");
 const config = require("../util/config");
 const firebase = require("firebase");
 const enumDefinations = require("../util/enums");
+const { getGroupObject } = require("./groups");
 
 const {
   validateSignupData,
@@ -180,9 +181,9 @@ exports.signupUser = (req, res) => {
     .get()
     .then((doc) => {
       if (doc.exists) {
-        return res
-          .status(400)
-          .json({ errors: { userName: `The user ${newUser.userName} already exists` }});
+        return res.status(400).json({
+          errors: { userName: `The user ${newUser.userName} already exists` },
+        });
       } else {
         return firebase
           .auth()
@@ -212,9 +213,9 @@ exports.signupUser = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.code === "auth/email-already-in-use") {
-        return res
-          .status(400)
-          .json({ errors: {email: `Email ${newUser.email} is already in use` }});
+        return res.status(400).json({
+          errors: { email: `Email ${newUser.email} is already in use` },
+        });
       } else {
         return res.status(500).json({
           error: err.code,
@@ -245,8 +246,9 @@ exports.getUserDetails = (req, res) => {
       // Send smallest possible image for the userImage
       let imageUrl = userData.user.imageUrl;
       if (userData.user.thumbnail) imageUrl = userData.user.thumbnail;
-      else if (userData.user.imageUrlSmall) imageUrl = userData.user.imageUrlSmall;
-       
+      else if (userData.user.imageUrlSmall)
+        imageUrl = userData.user.imageUrlSmall;
+
       userData.barks = [];
       data.forEach((doc) => {
         let barkCat = "GENERAL";
@@ -275,8 +277,35 @@ exports.getUserDetails = (req, res) => {
       return;
     })
     .then(() => {
+      if (userData.user.groups && userData.user.groups.length > 0) {
+        const unique = [
+          ...new Set(userData.user.groups.map((item) => item.groupId)),
+        ];
+        return Promise.all(
+          unique.map((groupId) => {
+            return getGroupObject(groupId);
+          })
+        );
+      } else return;
+    })
+    .then((groups) => {
+      if (groups) {
+        let i = 0;
+        groups.forEach((elem) => {
+          userData.user.groups[i].groupName = elem.data().groupName;
+          userData.user.groups[i].imageUrl = elem.data().imageUrl;
+          if (elem.data().thumbnail) {
+            userData.user.groups[i].imageUrl = elem.data().thumbnail;
+          } else if (elem.data().imageUrlSmall) {
+            userData.user.groups[i].imageUrl = elem.data().imageUrlSmall;
+          }
+          ++i;
+        });
+      } else return;
+    })
+    .then(() => {
       //Get Pet Profiles  if present
-      console.log("userData..", userData);
+      //console.log("userData..", userData);
       if (userData.user.petProfiles)
         return Promise.all(
           userData.user.petProfiles.map((petProfile) => {
@@ -323,15 +352,15 @@ exports.getUserDetails = (req, res) => {
 };
 
 // Get user image
-exports.getUserImageUrl = async (userName) => {
-  console.log("getUserImageUrl: getting data for :", userName);
+exports.getUserObject = async (userName) => {
+  //console.log("getUserObject: getting data for :", userName);
   return (
     db
       .doc(`/users/${userName}`)
       .get()
       /*.then((doc) => {
       if (doc.exists) {        
-        console.log("getUserImageUrl: found data ", doc.data().imageUrl);
+        console.log("getUserObject: found data ", doc.data().imageUrl);
         return doc.data().imageUrl;
       } 
       else
@@ -441,14 +470,17 @@ exports.getAuthenticatedUser = (req, res) => {
 };
 
 // Add user details
-exports.addUserDetails = (req, res) => {
+// @deprecated
+exports.addUserDetails = async (req, res) => {
   let userDetails = reduceUserDetails(req.body);
 
   // TODO: Why can't I use userId?
   db.doc(`/users/${req.user.userName}`)
     .update(userDetails)
     .then(() => {
-      return res.json({ message: "Details added successfully" });
+      return res.json({
+        message: "@deprecated  @deprecated Details added successfully",
+      });
     })
     .catch((err) => {
       console.error(err);
@@ -475,7 +507,7 @@ exports.patchUser = (req, res) => {
     })
     .then((doc) => {
       //Update user
-      console.log("Doc data: ", doc.data());
+      //console.log("Doc data: ", doc.data());
       // TODO: Validating if fields exist. We might need to allow to enter fields
       /*
       for (const [key, value] of Object.entries(req.body)) {
@@ -490,7 +522,8 @@ exports.patchUser = (req, res) => {
         }
         //console.log(`${key}: ${value}`);        
       }*/
-      return doc.ref.update(req.body);
+      let userDetails = reduceUserDetails(req.body, doc.data());
+      return doc.ref.update(userDetails);
     })
     .then(() => {
       res.json({ message: `User ${req.user.userName} updated successfully` });
@@ -512,7 +545,7 @@ exports.uploadUserImage = (req, res) => {
 
   let imageToBeUploaded = {};
   let imageFileName;
-  let imageExtension
+  let imageExtension;
   // TODO: String for image token
   //let generatedToken = uuid();
 
@@ -522,7 +555,9 @@ exports.uploadUserImage = (req, res) => {
       return res.status(400).json({ message: "Wrong file type submitted" });
     }
     // my.image.png => ['my', 'image', 'png']
-    imageExtension = filename.split(".")[filename.split(".").length - 1].toLowerCase();;
+    imageExtension = filename
+      .split(".")
+      [filename.split(".").length - 1].toLowerCase();
     // 32756238461724837.png
     imageFileName = `${req.user.userName}-${Math.round(
       Math.random() * 1000000000000
@@ -554,7 +589,7 @@ exports.uploadUserImage = (req, res) => {
             //firebaseStorageDownloadTokens: generatedToken,
           },
         },
-        destination: destination
+        destination: destination,
       })
       .then((obj) => {
         let file = encodeURIComponent(obj[0].name);
@@ -564,11 +599,19 @@ exports.uploadUserImage = (req, res) => {
         //const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media&token=${generatedToken}`;
         const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${file}?alt=media`;
 
-        let strChange = file.replace(`.${imageExtension}`, `_600x600.${imageExtension}`)
+        let strChange = file.replace(
+          `.${imageExtension}`,
+          `_600x600.${imageExtension}`
+        );
         const imageUrlSmall = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${strChange}?alt=media`;
-        strChange = file.replace(`.${imageExtension}`, `_200x200.${imageExtension}`)
+        strChange = file.replace(
+          `.${imageExtension}`,
+          `_200x200.${imageExtension}`
+        );
         const thumbnail = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${strChange}?alt=media`;
-        return db.doc(`/users/${req.user.userName}`).update({ imageUrl, imageUrlSmall, thumbnail});
+        return db
+          .doc(`/users/${req.user.userName}`)
+          .update({ imageUrl, imageUrlSmall, thumbnail });
       })
       .then(() => {
         return res.json({ message: "image uploaded successfully" });
