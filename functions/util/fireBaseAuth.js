@@ -35,6 +35,12 @@ module.exports = (req, res, next) => {
     })
     .catch((err) => {
       console.error("Error verifying token", err);
-      res.status(403).json(err);
+      if (err.code == "auth/id-token-expired") {
+        res
+          .status(403)
+          .json({message: `Login token has expired. Please sign in again.`});
+      } else {
+        res.status(403).json(err);
+      }
     });
 };
