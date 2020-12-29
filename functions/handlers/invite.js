@@ -1,6 +1,4 @@
 const { admin, db } = require("../util/admin");
-const config = require("../util/config");
-const enumDefinations = require("../util/enums");
 
 // Invite external users to join Funta
 exports.postInviteFunta = (req, res) => {

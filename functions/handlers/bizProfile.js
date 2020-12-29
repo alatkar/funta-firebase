@@ -1,6 +1,4 @@
-const { admin, db } = require("../util/admin");
-const config = require("../util/config");
-const enumDefinations = require("../util/enums");
+const { admin, db } = require("../util/admin"););
 
 exports.getBizProfile = (req, res) => {
   let bizProfile = {};

@@ -1,5 +1,4 @@
 const { admin, db } = require("../util/admin");
-const config = require("../util/config");
 
 // Patch a comment
 exports.patchComment = (req, res) => {

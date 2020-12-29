@@ -1,6 +1,4 @@
 const { admin, db } = require("../util/admin");
-const config = require("../util/config");
-const enumDefinations = require("../util/enums");
 
 // User are Interested, MayBe or default (Not Interested)
 // When interest is shown, we will add them in corresponding array interested or mayBe

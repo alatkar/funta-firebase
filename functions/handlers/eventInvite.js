@@ -1,6 +1,4 @@
 const { admin, db } = require("../util/admin");
-const config = require("../util/config");
-const enumDefinations = require("../util/enums");
 
 // Invite to group: Only admind can request users.
 // User should already be registered. So can invite only site users

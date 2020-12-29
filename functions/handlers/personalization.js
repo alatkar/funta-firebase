@@ -1,6 +1,4 @@
 const { admin, db } = require("../util/admin");
-const config = require("../util/config");
-const enumDefinations = require("../util/enums");
 
 exports.getPersonalPetProfile = (req, res) => {
   let petProfile = [];

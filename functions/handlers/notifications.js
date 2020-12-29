@@ -1,7 +1,4 @@
 const { admin, db } = require("../util/admin");
-const config = require("../util/config");
-const enumDefinations = require("../util/enums");
-const { getUserImageUrl } = require("./users");
 
 // Get a News
 exports.getUserNotifications = (req, res) => {

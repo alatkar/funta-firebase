@@ -1,6 +1,4 @@
 const { admin, db } = require("../util/admin");
-const config = require("../util/config");
-const enumDefinations = require("../util/enums");
 
 exports.getGroup = (req, res) => {
   let groupData = {};
@@ -82,6 +80,8 @@ exports.postGroup = (req, res) => {
     description: req.body.description,
     userId: req.user.userId,
     userName: req.user.userName,
+    invitations: [],
+    waitList: [],
   };
 
   newGroup.members = [];
